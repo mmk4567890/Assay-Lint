@@ -1,0 +1,12 @@
+sample_id,assay,value,unit,timestamp,analyst
+S1001,glucose,92,mg/dL,2026-10-01T08:15:00Z,jdoe
+S1001,potassium,4.1,mmol/L,2026-10-01T08:20:00Z,jdoe
+S1001,sodium,139,mmol/L,2026-10-01T08:25:00Z,jdoe
+S1002,glucose,118,mg/dL,2026-10-01T09:05:00Z,asmith
+S1002,hemoglobin,13.8,g/dL,2026-10-01T09:10:00Z,asmith
+S1002,creatinine,0.92,mg/dL,2026-10-01T09:12:00Z,asmith
+S1003,ph,7.41,pH,2026-10-02T10:00:00+02:00,"Nguyen, T."
+S1003,sodium,142,mmol/L,2026-10-02T08:30:00Z,"Nguyen, T."
+
+S1004,hemoglobin,15.2,g/dL,2026-10-03T11:45:00Z,jdoe
+S1004,creatinine,1.1,mg/dL,2026-10-03T11:50:00Z,jdoe

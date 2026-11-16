@@ -1,0 +1,16 @@
+sample_id,assay,value,unit,timestamp,analyst
+S2001,glucose,95,mg/dL,2026-10-01T08:15:00Z,jdoe
+S2001,glucose,97,mg/dL,2026-10-01T08:45:00Z,jdoe
+S2002,glucose,750,mg/dL,2026-10-01T09:00:00Z,asmith
+S2003,potassium,4.4,mEq/L,2026-10-01T09:30:00Z,asmith
+S2004,sodium,n/a,mmol/L,2026-10-01T10:00:00Z,asmith
+S2005,hemoglobin,14.1,g/dL,2026/10/02 10:00,"Nguyen, T."
+S2006,creatinine,0.8,mg/dL,2031-01-01T00:00:00Z,"Nguyen, T."
+S2007,ph,7.38,pH,2026-10-02T12:00:00Z,
+S2008,ph,7.40,pH,2026-10-03T14:00:00Z,jdoe
+S2008,glucose,101,mg/dL,2026-10-03T09:00:00Z,jdoe
+S2009,albumin,4.2,g/dL,2026-10-03T15:00:00Z,asmith
+
+S2010,glucose,88,mg/dL
+S2011,"sodium,141,mmol/L,2026-10-04T08:00:00Z,jdoe
+S2012,creatinine,25,mg/dl,2026-10-04T09:00:00Z,asmith
