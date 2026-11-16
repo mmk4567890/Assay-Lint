@@ -20,6 +20,19 @@ public record ValidationIssue(int line, String sampleId, String rule, Severity s
             .thenComparing(ValidationIssue::rule)
             .thenComparing(ValidationIssue::message);
 
+    /**
+     * Creates an issue for a parsed record, taking the line and sample ID from it.
+     *
+     * @param record   the record the issue refers to
+     * @param rule     name of the rule raising the issue
+     * @param severity how serious the issue is
+     * @param message  human-readable description
+     * @return the new issue
+     */
+    public static ValidationIssue of(SampleRecord record, String rule, Severity severity, String message) {
+        return new ValidationIssue(record.line(), record.sampleId(), rule, severity, message);
+    }
+
     /** Rejects null fields so report writers never have to null-check. */
     public ValidationIssue {
         Objects.requireNonNull(sampleId, "sampleId");
