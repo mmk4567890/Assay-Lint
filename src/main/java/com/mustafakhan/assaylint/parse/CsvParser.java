@@ -26,8 +26,10 @@ import java.util.Set;
  * Blank lines are skipped, the header may list columns in any order, and a file
  * without a header is read in the default column order with a warning. Rows that
  * cannot be read (wrong column count, broken quoting) are reported as issues with
- * their line number rather than aborting the run. Field values are not interpreted
- * here; that is left to the validation rules.
+ * their line number rather than aborting the run. A header that names the wrong
+ * columns is the exception: no row can be mapped safely, so parsing stops with an
+ * {@link InvalidHeaderException}. Field values are not interpreted here; that is
+ * left to the validation rules.
  *
  * <p>Each physical line is one record, so quoted fields cannot span lines.
  */
@@ -49,9 +51,10 @@ public final class CsvParser {
      *
      * @param file the CSV file to read
      * @return the parsed records and any structural issues
-     * @throws IOException if the file cannot be read
+     * @throws IOException            if the file cannot be read
+     * @throws InvalidHeaderException if the header row names the wrong columns
      */
-    public ParseResult parse(Path file) throws IOException {
+    public ParseResult parse(Path file) throws IOException, InvalidHeaderException {
         try (Reader reader = new InputStreamReader(Files.newInputStream(file), StandardCharsets.UTF_8)) {
             return parse(reader);
         }
@@ -62,9 +65,10 @@ public final class CsvParser {
      *
      * @param reader source of CSV text; not closed by this method
      * @return the parsed records and any structural issues
-     * @throws IOException if reading fails
+     * @throws IOException            if reading fails
+     * @throws InvalidHeaderException if the header row names the wrong columns
      */
-    public ParseResult parse(Reader reader) throws IOException {
+    public ParseResult parse(Reader reader) throws IOException, InvalidHeaderException {
         return new Session().run(new BufferedReader(reader));
     }
 
@@ -75,7 +79,7 @@ public final class CsvParser {
         private Map<String, Integer> columnIndex;
         private int dataRows;
 
-        ParseResult run(BufferedReader reader) throws IOException {
+        ParseResult run(BufferedReader reader) throws IOException, InvalidHeaderException {
             int lineNumber = 0;
             String line;
             while ((line = reader.readLine()) != null) {
@@ -86,16 +90,13 @@ public final class CsvParser {
                 if (line.isBlank()) {
                     continue;
                 }
-                if (!handleLine(lineNumber, line)) {
-                    break;
-                }
+                handleLine(lineNumber, line);
             }
             addFileLevelIssues();
             return new ParseResult(records, issues, dataRows);
         }
 
-        /** Returns {@code false} when parsing cannot continue. */
-        private boolean handleLine(int lineNumber, String line) {
+        private void handleLine(int lineNumber, String line) throws InvalidHeaderException {
             List<String> fields;
             try {
                 fields = CsvLineSplitter.split(line);
@@ -105,23 +106,23 @@ public final class CsvParser {
                 }
                 dataRows++;
                 issues.add(error(lineNumber, "", "Malformed row: " + e.getMessage()));
-                return true;
+                return;
             }
             if (columnIndex == null) {
                 if (looksLikeHeader(fields)) {
-                    return readHeader(lineNumber, fields);
+                    readHeader(lineNumber, fields);
+                    return;
                 }
                 useDefaultColumns(lineNumber);
             }
             readRow(lineNumber, fields);
-            return true;
         }
 
         private boolean looksLikeHeader(List<String> fields) {
             return fields.stream().map(Session::normalize).anyMatch(COLUMNS::contains);
         }
 
-        private boolean readHeader(int lineNumber, List<String> fields) {
+        private void readHeader(int lineNumber, List<String> fields) throws InvalidHeaderException {
             Map<String, Integer> index = new HashMap<>();
             Set<String> problems = new LinkedHashSet<>();
             for (int i = 0; i < fields.size(); i++) {
@@ -138,12 +139,10 @@ public final class CsvParser {
                 }
             }
             if (!problems.isEmpty()) {
-                issues.add(error(lineNumber, "", "Invalid header: " + String.join(", ", problems)
-                        + "; no rows were read"));
-                return false;
+                throw new InvalidHeaderException("Invalid header on line " + lineNumber + ": "
+                        + String.join(", ", problems));
             }
             columnIndex = index;
-            return true;
         }
 
         private void useDefaultColumns(int lineNumber) {

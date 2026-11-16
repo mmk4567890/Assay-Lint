@@ -17,6 +17,8 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import picocli.CommandLine;
 
 class ValidateCommandTest {
@@ -149,6 +151,21 @@ class ValidateCommandTest {
 
         assertEquals(ExitCodes.BAD_INPUT, validate(csv("")));
         assertTrue(err.toString().contains("min (9) is greater than max (1)"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "sample_id,assay,value,unit,timestamp",
+        "sample_id,sample_id,assay,value,unit,timestamp,analyst",
+        "sample_id,assay,value,unit,timestamp,analyst,notes"
+    })
+    void badHeaderExitsTwo(String header) throws IOException {
+        Path file = Files.writeString(dir.resolve("bad-header.csv"),
+                header + "\nS1,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe\n");
+
+        assertEquals(ExitCodes.BAD_INPUT, validate(file));
+        assertTrue(err.toString().contains("Invalid header on line 1"), err.toString());
+        assertEquals("", out.toString());
     }
 
     @Test

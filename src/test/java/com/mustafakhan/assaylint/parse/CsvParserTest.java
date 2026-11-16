@@ -1,13 +1,13 @@
 package com.mustafakhan.assaylint.parse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mustafakhan.assaylint.model.ParseResult;
 import com.mustafakhan.assaylint.model.SampleRecord;
 import com.mustafakhan.assaylint.model.Severity;
 import com.mustafakhan.assaylint.model.ValidationIssue;
-import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,12 +22,12 @@ class CsvParserTest {
 
     private final CsvParser parser = new CsvParser();
 
-    private ParseResult parse(String csv) throws IOException {
+    private ParseResult parse(String csv) throws Exception {
         return parser.parse(new StringReader(csv));
     }
 
     @Test
-    void parsesValidFile() throws IOException {
+    void parsesValidFile() throws Exception {
         ParseResult result = parse(HEADER + ROW);
 
         assertTrue(result.issues().isEmpty());
@@ -37,7 +37,7 @@ class CsvParserTest {
     }
 
     @Test
-    void skipsBlankLinesButKeepsLineNumbers() throws IOException {
+    void skipsBlankLinesButKeepsLineNumbers() throws Exception {
         ParseResult result = parse("\n" + HEADER + "\n   \n" + ROW);
 
         assertTrue(result.issues().isEmpty());
@@ -45,7 +45,7 @@ class CsvParserTest {
     }
 
     @Test
-    void trimsFieldValues() throws IOException {
+    void trimsFieldValues() throws Exception {
         ParseResult result = parse(HEADER + " S1 , glucose ,95,mg/dL,2026-01-05T10:00:00Z, jdoe\n");
 
         SampleRecord record = result.records().get(0);
@@ -54,14 +54,14 @@ class CsvParserTest {
     }
 
     @Test
-    void handlesQuotedFieldWithComma() throws IOException {
+    void handlesQuotedFieldWithComma() throws Exception {
         ParseResult result = parse(HEADER + "S1,glucose,95,mg/dL,2026-01-05T10:00:00Z,\"Doe, J.\"\n");
 
         assertEquals("Doe, J.", result.records().get(0).analyst());
     }
 
     @Test
-    void mapsReorderedHeaderByName() throws IOException {
+    void mapsReorderedHeaderByName() throws Exception {
         ParseResult result = parse("analyst,Value,assay,unit,timestamp,SAMPLE_ID\n"
                 + "jdoe,95,glucose,mg/dL,2026-01-05T10:00:00Z,S1\n");
 
@@ -73,7 +73,7 @@ class CsvParserTest {
     }
 
     @Test
-    void missingHeaderAssumesDefaultOrderAndWarns() throws IOException {
+    void missingHeaderAssumesDefaultOrderAndWarns() throws Exception {
         ParseResult result = parse(ROW);
 
         assertEquals(1, result.records().size());
@@ -84,27 +84,24 @@ class CsvParserTest {
     }
 
     @Test
-    void headerMissingColumnStopsParsing() throws IOException {
-        ParseResult result = parse("sample_id,assay,value,unit,timestamp\n" + ROW);
+    void headerMissingColumnIsRejected() {
+        InvalidHeaderException e = assertThrows(InvalidHeaderException.class,
+                () -> parse("\nsample_id,assay,value,unit,timestamp\n" + ROW));
 
-        assertTrue(result.records().isEmpty());
-        ValidationIssue issue = result.issues().get(0);
-        assertEquals(Severity.ERROR, issue.severity());
-        assertEquals(1, issue.line());
-        assertTrue(issue.message().contains("missing column 'analyst'"));
+        assertEquals("Invalid header on line 2: missing column 'analyst'", e.getMessage());
     }
 
     @Test
-    void headerWithDuplicateOrUnknownColumnIsRejected() throws IOException {
-        ParseResult result = parse("sample_id,sample_id,assay,value,unit,timestamp,analyst,notes\n");
+    void headerWithDuplicateOrUnknownColumnIsRejected() {
+        InvalidHeaderException e = assertThrows(InvalidHeaderException.class,
+                () -> parse("sample_id,sample_id,assay,value,unit,timestamp,analyst,notes\n"));
 
-        String message = result.issues().get(0).message();
-        assertTrue(message.contains("duplicate column 'sample_id'"));
-        assertTrue(message.contains("unexpected column 'notes'"));
+        assertTrue(e.getMessage().contains("duplicate column 'sample_id'"), e.getMessage());
+        assertTrue(e.getMessage().contains("unexpected column 'notes'"), e.getMessage());
     }
 
     @Test
-    void reportsTooFewColumnsWithLineNumber() throws IOException {
+    void reportsTooFewColumnsWithLineNumber() throws Exception {
         ParseResult result = parse(HEADER + "S2,glucose,95\n" + ROW);
 
         assertEquals(1, result.records().size());
@@ -116,7 +113,7 @@ class CsvParserTest {
     }
 
     @Test
-    void reportsTooManyColumns() throws IOException {
+    void reportsTooManyColumns() throws Exception {
         ParseResult result = parse(HEADER + "S1,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe,extra\n");
 
         assertTrue(result.records().isEmpty());
@@ -124,7 +121,7 @@ class CsvParserTest {
     }
 
     @Test
-    void reportsUnterminatedQuoteAndContinues() throws IOException {
+    void reportsUnterminatedQuoteAndContinues() throws Exception {
         ParseResult result = parse(HEADER + "S1,\"glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe\n" + ROW);
 
         assertEquals(1, result.records().size());
@@ -135,7 +132,7 @@ class CsvParserTest {
     }
 
     @Test
-    void malformedFirstLineFallsBackToDefaultColumns() throws IOException {
+    void malformedFirstLineFallsBackToDefaultColumns() throws Exception {
         ParseResult result = parse("\"broken\n" + ROW);
 
         assertEquals(1, result.records().size());
@@ -143,7 +140,7 @@ class CsvParserTest {
     }
 
     @Test
-    void emptyFileIsAnError() throws IOException {
+    void emptyFileIsAnError() throws Exception {
         ParseResult result = parse("\n\n");
 
         ValidationIssue issue = result.issues().get(0);
@@ -152,7 +149,7 @@ class CsvParserTest {
     }
 
     @Test
-    void headerOnlyFileWarnsAboutNoData() throws IOException {
+    void headerOnlyFileWarnsAboutNoData() throws Exception {
         ParseResult result = parse(HEADER);
 
         assertEquals(Severity.WARNING, result.issues().get(0).severity());
@@ -160,7 +157,7 @@ class CsvParserTest {
     }
 
     @Test
-    void handlesCrlfAndByteOrderMark() throws IOException {
+    void handlesCrlfAndByteOrderMark() throws Exception {
         ParseResult result = parse("\uFEFF" + HEADER.replace("\n", "\r\n") + ROW.replace("\n", "\r\n"));
 
         assertTrue(result.issues().isEmpty());
@@ -168,7 +165,7 @@ class CsvParserTest {
     }
 
     @Test
-    void parsesFileFromDisk(@TempDir Path dir) throws IOException {
+    void parsesFileFromDisk(@TempDir Path dir) throws Exception {
         Path file = dir.resolve("samples.csv");
         Files.writeString(file, HEADER + ROW, StandardCharsets.UTF_8);
 

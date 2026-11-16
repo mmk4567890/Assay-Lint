@@ -98,13 +98,13 @@ The HTML report is a single file with inline CSS and no external assets. It cont
 |---|---|
 | `0` | No issues at or above the `--fail-on` level. |
 | `1` | At least one issue at or above the `--fail-on` level. |
-| `2` | Bad input: invalid arguments, a missing or unreadable input file, or an invalid config. |
+| `2` | Bad input: invalid arguments, a missing or unreadable input file, an invalid config, or a header with a missing, duplicate or unknown column. |
 
 ### Input format
 
 The CSV must have the columns `sample_id`, `assay`, `value`, `unit`, `timestamp` and `analyst`.
 
-- **Header.** The header may list the columns in any order, and names are matched case-insensitively. If the header is missing, the default column order is assumed and a warning is reported. A header with a missing, duplicate or unknown column is an error, and no rows are read.
+- **Header.** The header may list the columns in any order, and names are matched case-insensitively. If the header is missing, the default column order is assumed and a warning is reported. A header with a missing, duplicate or unknown column stops the run with exit code `2`: without a reliable column mapping, no row can be read safely.
 - **Fields and lines.** Fields may be quoted, which allows commas inside them, and `""` stands for a literal quote. Each line is one record, so a quoted field cannot span lines. Blank lines are ignored, and both LF and CRLF line endings work.
 - **Malformed rows.** A row with the wrong number of columns or broken quoting is reported with its line number, and validation continues with the next row.
 - **Timestamps.** They must be ISO-8601 date-times, such as `2026-10-01T08:15:00Z` or `2026-10-01T10:00:00+02:00`. A timestamp without an offset is read as UTC.
