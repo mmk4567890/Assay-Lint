@@ -22,7 +22,7 @@ class ConsoleReportWriterTest {
         assertTrue(text.contains("SHA-256: ab12cd34"));
         assertTrue(text.contains("Config:  config/assays.json"));
         assertTrue(text.contains("Run at:  2026-02-01T09:30:00Z"));
-        assertTrue(text.contains("Rows:    3 read, 2 parsed, 2 with issues"));
+        assertTrue(text.contains("Rows:    3 read, 2 parsed (1 with issues, 1 clean), 1 could not be parsed"), text);
     }
 
     @Test

@@ -11,6 +11,7 @@ import com.mustafakhan.assaylint.parse.CsvFormatException;
 import com.mustafakhan.assaylint.report.FileHasher;
 import com.mustafakhan.assaylint.report.Report;
 import com.mustafakhan.assaylint.report.ReportFormat;
+import com.mustafakhan.assaylint.report.RowCounts;
 import com.mustafakhan.assaylint.report.RunMetadata;
 import com.mustafakhan.assaylint.rules.RuleEngine;
 import java.io.IOException;
@@ -102,7 +103,7 @@ public final class ValidateCommand implements Callable<Integer> {
         List<ValidationIssue> issues = new ArrayList<>(parsed.issues());
         issues.addAll(new RuleEngine(RuleEngine.defaultRules(clock)).run(parsed.records(), rules));
         RunMetadata metadata = new RunMetadata(input.toString(), sha256, config.toString(),
-                parsed.dataRows(), parsed.records().size(), clock.instant());
+                RowCounts.of(parsed, issues), clock.instant());
         return new Report(metadata, issues);
     }
 

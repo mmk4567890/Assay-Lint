@@ -26,11 +26,6 @@ class ReportTest {
     }
 
     @Test
-    void countsDistinctDataRowsWithIssues() {
-        assertEquals(2, report.rowsWithIssues());
-    }
-
-    @Test
     void checksSeverityThreshold() {
         assertTrue(report.hasIssuesAtLeast(Severity.ERROR));
         assertFalse(Reports.clean().hasIssuesAtLeast(Severity.WARNING));

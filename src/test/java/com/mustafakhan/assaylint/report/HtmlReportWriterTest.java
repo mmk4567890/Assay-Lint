@@ -34,7 +34,7 @@ class HtmlReportWriterTest {
         assertTrue(html.contains("<dd>ab12cd34</dd>"));
         assertTrue(html.contains("<dd>config/assays.json</dd>"));
         assertTrue(html.contains("<dd>2026-02-01T09:30:00Z</dd>"));
-        assertTrue(html.contains("<dd>3 read, 2 parsed, 2 with issues</dd>"));
+        assertTrue(html.contains("<dd>3 read, 2 parsed (1 with issues, 1 clean), 1 could not be parsed</dd>"), html);
         assertTrue(html.contains("<b class=\"ERROR\">2</b>ERROR"));
     }
 

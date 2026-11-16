@@ -36,7 +36,7 @@ public final class ConsoleReportWriter implements ReportWriter {
 
     @Override
     public void write(Report report, Appendable out) throws IOException {
-        writeHeader(report.metadata(), report, out);
+        writeHeader(report.metadata(), out);
         if (report.issues().isEmpty()) {
             out.append(style(GREEN + BOLD, "No issues found.")).append(NL);
             return;
@@ -45,15 +45,13 @@ public final class ConsoleReportWriter implements ReportWriter {
         writeIssues(report.issues(), out);
     }
 
-    private void writeHeader(RunMetadata metadata, Report report, Appendable out) throws IOException {
+    private void writeHeader(RunMetadata metadata, Appendable out) throws IOException {
         out.append(style(BOLD, "assay-lint report")).append(NL)
                 .append("  Input:   ").append(metadata.inputFile()).append(NL)
                 .append("  SHA-256: ").append(metadata.inputSha256()).append(NL)
                 .append("  Config:  ").append(metadata.configFile()).append(NL)
                 .append("  Run at:  ").append(metadata.runAt().toString()).append(NL)
-                .append("  Rows:    ").append(String.valueOf(metadata.rowsRead())).append(" read, ")
-                .append(String.valueOf(metadata.rowsParsed())).append(" parsed, ")
-                .append(String.valueOf(report.rowsWithIssues())).append(" with issues").append(NL)
+                .append("  Rows:    ").append(metadata.rows().summary()).append(NL)
                 .append(NL);
     }
 

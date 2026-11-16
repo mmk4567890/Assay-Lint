@@ -25,8 +25,8 @@ assay-lint report
   Input:   examples\samples_with_errors.csv
   SHA-256: 875da7221fe9929b1158ac2741f65dfef055af4569eb346116f127250a78a754
   Config:  examples\assays.json
-  Run at:  2026-11-16T17:13:26Z
-  Rows:    14 read, 12 parsed, 12 with issues
+  Run at:  2026-11-16T17:48:41Z
+  Rows:    14 read, 12 parsed (10 with issues, 2 clean), 2 could not be parsed
 
 Summary: 13 issue(s)  11 error(s), 2 warning(s)
   Chronology         1
@@ -81,8 +81,8 @@ assay-lint report
   Input:   examples\instrument_export.csv
   SHA-256: 93b7846803aab67af0e9b48097927d70819c4478e76527023a3fa03f36c4fb09
   Config:  examples\assays.json
-  Run at:  2026-11-16T17:46:41Z
-  Rows:    25 read, 25 parsed, 5 with issues
+  Run at:  2026-11-16T17:48:41Z
+  Rows:    25 read, 25 parsed (4 with issues, 21 clean), 0 could not be parsed
 
 Summary: 8 issue(s)  4 error(s), 4 warning(s)
   DuplicateSampleId  1

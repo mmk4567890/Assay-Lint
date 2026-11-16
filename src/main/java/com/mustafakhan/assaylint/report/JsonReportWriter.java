@@ -33,9 +33,12 @@ public final class JsonReportWriter implements ReportWriter {
         node.put("configFile", metadata.configFile());
         node.put("runAt", metadata.runAt().toString());
         ObjectNode rows = node.putObject("rows");
-        rows.put("read", metadata.rowsRead());
-        rows.put("parsed", metadata.rowsParsed());
-        rows.put("withIssues", report.rowsWithIssues());
+        RowCounts counts = metadata.rows();
+        rows.put("read", counts.read());
+        rows.put("parsed", counts.parsed());
+        rows.put("parsedWithIssues", counts.parsedWithIssues());
+        rows.put("parsedClean", counts.parsedClean());
+        rows.put("unparsed", counts.unparsed());
         return node;
     }
 

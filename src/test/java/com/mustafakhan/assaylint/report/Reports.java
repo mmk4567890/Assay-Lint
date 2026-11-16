@@ -8,7 +8,8 @@ import java.util.List;
 /** Sample reports shared by the report writer tests. */
 final class Reports {
 
-    static final RunMetadata METADATA = new RunMetadata("data/samples.csv", "ab12cd34", "config/assays.json", 3, 2,
+    static final RunMetadata METADATA = new RunMetadata("data/samples.csv", "ab12cd34", "config/assays.json",
+            new RowCounts(3, 2, 1),
             Instant.parse("2026-02-01T09:30:00.750Z"));
 
     private Reports() {

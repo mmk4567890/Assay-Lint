@@ -25,7 +25,9 @@ class JsonReportWriterTest {
         assertEquals("2026-02-01T09:30:00Z", metadata.get("runAt").asText());
         assertEquals(3, metadata.at("/rows/read").asInt());
         assertEquals(2, metadata.at("/rows/parsed").asInt());
-        assertEquals(2, metadata.at("/rows/withIssues").asInt());
+        assertEquals(1, metadata.at("/rows/parsedWithIssues").asInt());
+        assertEquals(1, metadata.at("/rows/parsedClean").asInt());
+        assertEquals(1, metadata.at("/rows/unparsed").asInt());
     }
 
     @Test

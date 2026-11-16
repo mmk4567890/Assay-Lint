@@ -40,11 +40,17 @@ class ExamplesTest {
     void errorExampleTriggersEveryRule() throws IOException {
         assertEquals(ExitCodes.ISSUES_FOUND, validateAsJson("samples_with_errors.csv"));
 
-        JsonNode byRule = new ObjectMapper().readTree(out.toString()).at("/summary/byRule");
+        JsonNode root = new ObjectMapper().readTree(out.toString());
+        JsonNode byRule = root.at("/summary/byRule");
         Set<String> rules = new TreeSet<>();
         byRule.fieldNames().forEachRemaining(rules::add);
         assertEquals(Set.of("Chronology", "DuplicateSampleId", "NumericValue", "Parse", "Range", "RequiredFields",
                 "Timestamp", "Unit", "UnknownAssay"), rules);
+        assertEquals(14, root.at("/metadata/rows/read").asInt());
+        assertEquals(12, root.at("/metadata/rows/parsed").asInt());
+        assertEquals(10, root.at("/metadata/rows/parsedWithIssues").asInt());
+        assertEquals(2, root.at("/metadata/rows/parsedClean").asInt());
+        assertEquals(2, root.at("/metadata/rows/unparsed").asInt());
     }
 
     @Test
@@ -68,5 +74,7 @@ class ExamplesTest {
                 "25 ERROR Timestamp Timestamp 2031-03-01T08:31:15 is in the future"), issues);
         assertEquals(25, root.at("/metadata/rows/read").asInt());
         assertEquals(25, root.at("/metadata/rows/parsed").asInt());
+        assertEquals(4, root.at("/metadata/rows/parsedWithIssues").asInt());
+        assertEquals(0, root.at("/metadata/rows/unparsed").asInt());
     }
 }

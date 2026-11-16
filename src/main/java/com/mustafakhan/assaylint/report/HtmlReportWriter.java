@@ -67,8 +67,7 @@ public final class HtmlReportWriter implements ReportWriter {
         definition(out, "SHA-256", metadata.inputSha256());
         definition(out, "Config file", metadata.configFile());
         definition(out, "Run at (UTC)", metadata.runAt().toString());
-        definition(out, "Rows", metadata.rowsRead() + " read, " + metadata.rowsParsed() + " parsed, "
-                + report.rowsWithIssues() + " with issues");
+        definition(out, "Rows", metadata.rows().summary());
         out.append("</dl>\n");
     }
 

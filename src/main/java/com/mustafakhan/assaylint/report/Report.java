@@ -46,15 +46,6 @@ public record Report(RunMetadata metadata, List<ValidationIssue> issues) {
     }
 
     /**
-     * Counts the distinct data lines that have at least one issue.
-     *
-     * @return number of affected rows; file-level issues are not counted
-     */
-    public long rowsWithIssues() {
-        return issues.stream().mapToInt(ValidationIssue::line).filter(line -> line > 0).distinct().count();
-    }
-
-    /**
      * Returns whether any issue meets the given severity threshold.
      *
      * @param threshold the minimum severity of interest
