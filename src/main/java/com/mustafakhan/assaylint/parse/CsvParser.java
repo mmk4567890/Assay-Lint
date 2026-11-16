@@ -129,9 +129,8 @@ public final class CsvParser {
             try {
                 fields = CsvLineSplitter.split(line);
             } catch (MalformedLineException e) {
-                if (columnIndex == null) {
-                    useDefaultColumns(lineNumber);
-                }
+                // A line that cannot be split says nothing about whether the file has a
+                // header, so the column mapping stays undecided until a readable line.
                 dataRows++;
                 issues.add(error(lineNumber, "", "Malformed row: " + e.getMessage()));
                 return;

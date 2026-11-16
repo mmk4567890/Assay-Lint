@@ -12,6 +12,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -162,11 +163,36 @@ class CsvParserTest {
     }
 
     @Test
-    void malformedFirstLineFallsBackToDefaultColumns() throws Exception {
+    void headerAfterMalformedFirstLineIsStillUsed() throws Exception {
+        ParseResult result = parse("\"broken,line\n"
+                + "analyst,assay,value,unit,timestamp,sample_id\n"
+                + "jdoe,glucose,95,mg/dL,2026-01-05T10:00:00Z,S1\n");
+
+        assertEquals(1, result.issues().size());
+        ValidationIssue issue = result.issues().get(0);
+        assertEquals(1, issue.line());
+        assertEquals(Severity.ERROR, issue.severity());
+        assertEquals("Parse", issue.rule());
+        assertTrue(issue.message().startsWith("Malformed row"));
+        assertEquals(new SampleRecord(3, "S1", "glucose", "95", "mg/dL", "2026-01-05T10:00:00Z", "jdoe"),
+                result.records().get(0));
+    }
+
+    @Test
+    void malformedFirstLineThenDataAssumesDefaultColumns() throws Exception {
         ParseResult result = parse("\"broken\n" + ROW);
 
         assertEquals(1, result.records().size());
-        assertEquals(2, result.issues().size());
+        assertEquals(List.of(1, 2), result.issues().stream().map(ValidationIssue::line).toList());
+        assertTrue(result.issues().get(1).message().startsWith("Header row missing"));
+    }
+
+    @Test
+    void fileOfOnlyMalformedLinesReportsThemWithoutClaimingItIsEmpty() throws Exception {
+        ParseResult result = parse("\"broken\n");
+
+        assertEquals(1, result.issues().size());
+        assertTrue(result.issues().get(0).message().startsWith("Malformed row"));
     }
 
     @Test
