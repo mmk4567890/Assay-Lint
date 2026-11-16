@@ -1,0 +1,10 @@
+{
+  "assays": {
+    "glucose":    { "unit": "mg/dL",  "min": 0,   "max": 600 },
+    "hemoglobin": { "unit": "g/dL",   "min": 3,   "max": 25 },
+    "potassium":  { "unit": "mmol/L", "min": 1.5, "max": 10 },
+    "sodium":     { "unit": "mmol/L", "min": 100, "max": 180 },
+    "creatinine": { "unit": "mg/dL",  "min": 0.1, "max": 20 },
+    "ph":         { "unit": "pH",     "min": 6.5, "max": 8.0 }
+  }
+}
