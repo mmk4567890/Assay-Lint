@@ -1,113 +1,322 @@
 package com.mustafakhan.assaylint.report;
 
+import com.mustafakhan.assaylint.model.RuleNames;
 import com.mustafakhan.assaylint.model.Severity;
 import com.mustafakhan.assaylint.model.ValidationIssue;
 import java.io.IOException;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Map;
 
 /**
- * A single self-contained HTML file with a run summary and a sortable issues
- * table. All CSS and script are inline so the report can be archived or emailed
- * as one file and still render offline.
+ * A single self-contained HTML file: a pass/fail banner, run details, summary
+ * counts and a sortable issues table. All CSS and script are inline so the report
+ * can be archived or emailed as one file and still render offline.
  */
 public final class HtmlReportWriter implements ReportWriter {
 
+    private static final int SHORT_HASH_LENGTH = 12;
+    private static final String SEPARATOR = " \u00B7";
+    private static final DateTimeFormatter TIMESTAMP =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC);
+
     private static final String STYLE = """
-            body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;margin:2rem;color:#1f2933;background:#fff}
-            h1{font-size:1.5rem;margin:0 0 1rem}
-            h2{font-size:1.1rem;margin:2rem 0 .5rem}
-            dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem;margin:0}
-            dt{font-weight:600}dd{margin:0;font-family:ui-monospace,Consolas,monospace;word-break:break-all}
-            .cards{display:flex;gap:1rem;flex-wrap:wrap}
-            .card{border:1px solid #d9e2ec;border-radius:6px;padding:.75rem 1rem;min-width:7rem}
-            .card b{display:block;font-size:1.6rem}
-            .ERROR{color:#b42318}.WARNING{color:#a15c07}.ok{color:#067647}
-            table{border-collapse:collapse;width:100%;margin-top:.5rem}
-            th,td{text-align:left;padding:.4rem .6rem;border-bottom:1px solid #e4e7eb;vertical-align:top}
-            th{background:#f5f7fa;cursor:pointer;user-select:none;white-space:nowrap}
-            th:after{content:" \\2195";color:#9aa5b1}
-            td.num{text-align:right;font-variant-numeric:tabular-nums}
+            :root{--accent:#4338ca;--text:#111827;--muted:#4b5563;--border:#e5e7eb;--surface:#fff;--page:#f9fafb;
+            --stripe:#f9fafb;--hover:#f1f5f9;--error:#b42318;--error-bg:#fef3f2;--error-border:#fecdca;
+            --warning:#93370d;--warning-bg:#fffaeb;--warning-border:#fedf89;--ok:#067647;--ok-bg:#ecfdf3;
+            --ok-border:#abefc6;--radius:8px;--s1:8px;--s2:16px;--s3:24px;--s4:32px;
+            --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+            --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+            *{box-sizing:border-box}
+            body{margin:0;font:15px/1.5 var(--font);color:var(--text);background:var(--page);
+            -webkit-print-color-adjust:exact;print-color-adjust:exact}
+            .wrap{max-width:1100px;margin:0 auto;padding:0 var(--s2)}
+            .topbar{background:var(--surface);border-bottom:1px solid var(--border)}
+            .topbar .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px}
+            .wordmark{font-weight:700;font-size:18px;letter-spacing:-.01em;color:var(--accent)}
+            .version{font:13px var(--mono);color:var(--muted)}
+            main.wrap{display:grid;gap:var(--s3);padding-top:var(--s3);padding-bottom:var(--s4)}
+            h2{font-size:16px;font-weight:600;margin:0 0 var(--s2)}
+            .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--s3)}
+            .banner{display:flex;align-items:center;gap:var(--s2);padding:var(--s3);border:1px solid;border-radius:var(--radius)}
+            .banner-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;
+            color:#fff;font-size:20px;font-weight:700}
+            .banner-title{margin:0;font-size:24px;line-height:1.25;font-weight:700}
+            .banner-detail{margin:0;color:var(--muted)}
+            .banner-failed{background:var(--error-bg);border-color:var(--error-border)}
+            .banner-failed .banner-title{color:var(--error)}.banner-failed .banner-icon{background:var(--error)}
+            .banner-warning{background:var(--warning-bg);border-color:var(--warning-border)}
+            .banner-warning .banner-title{color:var(--warning)}.banner-warning .banner-icon{background:var(--warning)}
+            .banner-passed{background:var(--ok-bg);border-color:var(--ok-border)}
+            .banner-passed .banner-title{color:var(--ok)}.banner-passed .banner-icon{background:var(--ok)}
+            .details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2) var(--s3);margin:0}
+            .details div{min-width:0}.details .wide{grid-column:1/-1}
+            dt{font-size:13px;color:var(--muted)}
+            dd{margin:0;overflow-wrap:anywhere}
+            code{font:13px var(--mono);background:var(--hover);padding:2px 6px;border-radius:4px}
+            .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+            .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--s2) var(--s3)}
+            .stat-label{display:block;font-size:13px;color:var(--muted)}
+            .stat-value{display:block;font-size:32px;line-height:1.25;font-weight:700;font-variant-numeric:tabular-nums}
+            .stat-error .stat-value{color:var(--error)}.stat-warning .stat-value{color:var(--warning)}
+            .bars{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1)}
+            .bars li{display:grid;grid-template-columns:minmax(120px,200px) 1fr 4ch;gap:var(--s2);align-items:center;font-size:14px}
+            .bar-track{height:8px;background:var(--hover);border-radius:4px;overflow:hidden}
+            .bar{display:block;height:100%;background:var(--accent);border-radius:4px}
+            .bar-count{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+            .table-card{padding:0;overflow:hidden}
+            .table-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:var(--s1) var(--s2);
+            padding:var(--s3) var(--s3) var(--s2)}
+            .table-head h2{margin:0}
+            .muted{color:var(--muted);font-size:13px}
+            .table-wrap{overflow:auto;max-height:70vh;border-top:1px solid var(--border)}
+            table{width:100%;min-width:680px;border-collapse:separate;border-spacing:0;font-size:14px}
+            th,td{text-align:left;vertical-align:top;padding:var(--s1) var(--s2)}
+            th{position:sticky;top:0;z-index:1;background:var(--surface);border-bottom:1px solid var(--border);
+            color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
+            th:hover{color:var(--text)}
+            th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+            th[data-dir]{color:var(--text)}
+            th[data-dir]::after{color:var(--accent);font-size:10px;margin-left:4px}
+            th[data-dir=asc]::after{content:"\\25B2"}th[data-dir=desc]::after{content:"\\25BC"}
+            th[data-type=num],td.num{text-align:right}
+            td{border-bottom:1px solid var(--border)}
+            td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+            td.rule,.segment{white-space:nowrap}
+            tbody tr:last-child td{border-bottom:0}
+            tbody tr:nth-child(even){background:var(--stripe)}
+            tbody tr:hover{background:var(--hover)}
+            .pill{display:inline-block;padding:0 var(--s1);border:1px solid;border-radius:999px;font-size:12px;
+            font-weight:600;line-height:20px;white-space:nowrap}
+            .pill-error{color:var(--error);background:var(--error-bg);border-color:var(--error-border)}
+            .pill-warning{color:var(--warning);background:var(--warning-bg);border-color:var(--warning-border)}
+            .none{color:var(--muted)}
+            .empty{margin:0;padding:var(--s3);color:var(--ok);font-weight:600}
+            footer{border-top:1px solid var(--border);color:var(--muted);font-size:13px}
+            footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s1);padding-top:var(--s2);
+            padding-bottom:var(--s2)}
+            @media (max-width:640px){
+            .details{grid-template-columns:1fr}
+            .banner{align-items:flex-start}.banner-title{font-size:20px}
+            .stat{padding:var(--s2)}.stat-value{font-size:24px}
+            .bars li{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 4ch}}
+            @media print{
+            body{background:#fff}
+            th[data-dir]::after{content:none}
+            th{position:static;cursor:default}
+            .table-wrap{max-height:none;overflow:visible}
+            tbody tr:hover{background:inherit}
+            .banner,.card,.stat{break-inside:avoid}}
             """;
 
-    // Sorts by the clicked column; columns marked data-type="num" compare numerically.
     private static final String SCRIPT = """
-            document.querySelectorAll('th').forEach(function (th, col) {
-              th.addEventListener('click', function () {
-                var body = th.closest('table').tBodies[0];
-                var asc = th.dataset.dir !== 'asc';
-                th.parentNode.querySelectorAll('th').forEach(function (h) { delete h.dataset.dir; });
-                th.dataset.dir = asc ? 'asc' : 'desc';
-                var numeric = th.dataset.type === 'num';
-                Array.from(body.rows).sort(function (a, b) {
-                  var x = a.cells[col].textContent, y = b.cells[col].textContent;
+            (function () {
+              var table = document.querySelector('table.issues');
+              if (!table) { return; }
+              var headers = table.tHead.rows[0].cells;
+              function value(cell) {
+                return cell.hasAttribute('data-value') ? cell.getAttribute('data-value') : cell.textContent;
+              }
+              function sortBy(index) {
+                var th = headers[index];
+                var asc = th.getAttribute('data-dir') !== 'asc';
+                Array.prototype.forEach.call(headers, function (h) {
+                  h.removeAttribute('data-dir');
+                  h.removeAttribute('aria-sort');
+                });
+                th.setAttribute('data-dir', asc ? 'asc' : 'desc');
+                th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
+                var numeric = th.getAttribute('data-type') === 'num';
+                var body = table.tBodies[0];
+                Array.prototype.slice.call(body.rows).sort(function (a, b) {
+                  var x = value(a.cells[index]), y = value(b.cells[index]);
                   var c = numeric ? Number(x) - Number(y) : x.localeCompare(y);
                   return asc ? c : -c;
                 }).forEach(function (row) { body.appendChild(row); });
+              }
+              Array.prototype.forEach.call(headers, function (th, index) {
+                th.addEventListener('click', function () { sortBy(index); });
+                th.addEventListener('keydown', function (event) {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    sortBy(index);
+                  }
+                });
               });
-            });
+            })();
             """;
 
     @Override
     public void write(Report report, Appendable out) throws IOException {
+        RunMetadata metadata = report.metadata();
         out.append("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n")
                 .append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n")
-                .append("<title>assay-lint report: ").append(escape(report.metadata().inputFile())).append("</title>\n")
-                .append("<style>\n").append(STYLE).append("</style>\n</head>\n<body>\n")
-                .append("<h1>assay-lint report</h1>\n");
-        writeMetadata(report, out);
-        writeSummary(report, out);
+                .append("<title>assay-lint report: ").append(escape(displayPath(metadata.inputFile())))
+                .append("</title>\n<style>\n").append(STYLE).append("</style>\n</head>\n<body>\n");
+        writeTopBar(metadata, out);
+        out.append("<main class=\"wrap\">\n");
+        writeBanner(report, out);
+        writeRunDetails(metadata, out);
+        writeOverview(report, out);
+        if (!report.issues().isEmpty()) {
+            writeRuleBreakdown(report, out);
+        }
         writeIssues(report, out);
+        out.append("</main>\n");
+        writeFooter(metadata, out);
         out.append("<script>\n").append(SCRIPT).append("</script>\n</body>\n</html>\n");
     }
 
-    private static void writeMetadata(Report report, Appendable out) throws IOException {
-        RunMetadata metadata = report.metadata();
-        out.append("<dl>\n");
-        definition(out, "Input file", metadata.inputFile());
-        definition(out, "SHA-256", metadata.inputSha256());
-        definition(out, "Config file", metadata.configFile());
-        definition(out, "Run at (UTC)", metadata.runAt().toString());
-        definition(out, "Rows", metadata.rows().summary());
-        out.append("</dl>\n");
+    private static void writeTopBar(RunMetadata metadata, Appendable out) throws IOException {
+        out.append("<header class=\"topbar\"><div class=\"wrap\">")
+                .append("<span class=\"wordmark\">assay-lint</span>")
+                .append("<span class=\"version\">v").append(escape(metadata.toolVersion())).append("</span>")
+                .append("</div></header>\n");
     }
 
-    private static void definition(Appendable out, String term, String value) throws IOException {
-        out.append("<dt>").append(term).append("</dt><dd>").append(escape(value)).append("</dd>\n");
-    }
-
-    private static void writeSummary(Report report, Appendable out) throws IOException {
-        out.append("<h2>Summary</h2>\n<div class=\"cards\">\n");
-        card(out, "", "Issues", report.issues().size());
-        for (Map.Entry<Severity, Long> entry : report.countsBySeverity().entrySet()) {
-            card(out, entry.getKey().name(), entry.getKey().name(), entry.getValue());
+    private static void writeBanner(Report report, Appendable out) throws IOException {
+        Map<Severity, Long> counts = report.countsBySeverity();
+        long errors = counts.get(Severity.ERROR);
+        long warnings = counts.get(Severity.WARNING);
+        String failOn = report.metadata().failOn().name().toLowerCase(Locale.ROOT);
+        String kind;
+        String icon;
+        String title;
+        String detail;
+        if (!report.passed()) {
+            kind = "failed";
+            icon = "\u2715";
+            title = "Failed \u2014 " + plural(errors, "error") + ", " + plural(warnings, "warning");
+            detail = "Issues were found at or above the fail-on level (" + failOn + ").";
+        } else if (warnings > 0) {
+            kind = "warning";
+            icon = "!";
+            title = "Passed with warnings";
+            detail = plural(warnings, "warning") + ", none at or above the fail-on level (" + failOn + ").";
+        } else {
+            kind = "passed";
+            icon = "\u2713";
+            title = "Passed";
+            detail = "No issues found.";
         }
-        for (Map.Entry<String, Long> entry : report.countsByRule().entrySet()) {
-            card(out, "", escape(entry.getKey()), entry.getValue());
-        }
-        out.append("</div>\n");
+        out.append("<section class=\"banner banner-").append(kind).append("\" role=\"status\">")
+                .append("<span class=\"banner-icon\" aria-hidden=\"true\">").append(icon).append("</span>")
+                .append("<div><p class=\"banner-title\">").append(title).append("</p>")
+                .append("<p class=\"banner-detail\">").append(detail).append("</p></div></section>\n");
     }
 
-    private static void card(Appendable out, String cssClass, String label, long count) throws IOException {
-        out.append("<div class=\"card\"><b class=\"").append(cssClass).append("\">").append(String.valueOf(count))
-                .append("</b>").append(label).append("</div>\n");
+    private static void writeRunDetails(RunMetadata metadata, Appendable out) throws IOException {
+        RowCounts rows = metadata.rows();
+        String hash = metadata.inputSha256();
+        String shortHash = hash.length() > SHORT_HASH_LENGTH ? hash.substring(0, SHORT_HASH_LENGTH) + "\u2026" : hash;
+        out.append("<section class=\"card\"><h2>Run details</h2>\n<dl class=\"details\">\n");
+        detail(out, "", "Input file", escape(displayPath(metadata.inputFile())));
+        detail(out, "", "Config file", escape(displayPath(metadata.configFile())));
+        detail(out, "", "Run at", TIMESTAMP.format(metadata.runAt()));
+        detail(out, "", "SHA-256", "<code title=\"" + escape(hash) + "\">" + escape(shortHash) + "</code>");
+        detail(out, "wide", "Rows", String.join(" ",
+                segment(rows.read() + " read" + SEPARATOR),
+                segment(rows.parsed() + " parsed" + SEPARATOR),
+                segment(rows.parsedWithIssues() + " with issues" + SEPARATOR),
+                segment(rows.parsedClean() + " clean" + SEPARATOR),
+                segment(rows.unparsed() + " unparsed")));
+        out.append("</dl></section>\n");
+    }
+
+    // Keeps each count together with its trailing separator, so a wrapped line never starts with a dot.
+    private static String segment(String text) {
+        return "<span class=\"segment\">" + text + "</span>";
+    }
+
+    private static void detail(Appendable out, String cssClass, String term, String html) throws IOException {
+        out.append(cssClass.isEmpty() ? "<div>" : "<div class=\"" + cssClass + "\">")
+                .append("<dt>").append(term).append("</dt><dd>").append(html).append("</dd></div>\n");
+    }
+
+    private static void writeOverview(Report report, Appendable out) throws IOException {
+        Map<Severity, Long> counts = report.countsBySeverity();
+        out.append("<section aria-labelledby=\"overview\"><h2 id=\"overview\">Overview</h2>\n<div class=\"stats\">\n");
+        stat(out, "", "Total issues", report.issues().size());
+        long errors = counts.get(Severity.ERROR);
+        long warnings = counts.get(Severity.WARNING);
+        // Zero counts stay neutral: a red "0" reads as an alarm.
+        stat(out, errors > 0 ? "stat-error" : "", "Errors", errors);
+        stat(out, warnings > 0 ? "stat-warning" : "", "Warnings", warnings);
+        out.append("</div></section>\n");
+    }
+
+    private static void stat(Appendable out, String cssClass, String label, long value) throws IOException {
+        out.append("<div class=\"stat ").append(cssClass).append("\"><span class=\"stat-label\">").append(label)
+                .append("</span><span class=\"stat-value\">").append(String.valueOf(value)).append("</span></div>\n");
+    }
+
+    private static void writeRuleBreakdown(Report report, Appendable out) throws IOException {
+        Map<String, Long> byRule = report.countsByRule();
+        long max = byRule.values().stream().mapToLong(Long::longValue).max().orElse(1);
+        out.append("<section class=\"card\"><h2>Issues by rule</h2>\n<ul class=\"bars\">\n");
+        for (Map.Entry<String, Long> entry : byRule.entrySet()) {
+            long percent = Math.max(1, Math.round(100.0 * entry.getValue() / max));
+            out.append("<li><span>").append(escape(RuleNames.displayName(entry.getKey()))).append("</span>")
+                    .append("<span class=\"bar-track\"><span class=\"bar\" style=\"width:").append(String.valueOf(percent))
+                    .append("%\"></span></span><span class=\"bar-count\">").append(String.valueOf(entry.getValue()))
+                    .append("</span></li>\n");
+        }
+        out.append("</ul></section>\n");
     }
 
     private static void writeIssues(Report report, Appendable out) throws IOException {
-        out.append("<h2>Issues</h2>\n");
+        out.append("<section class=\"card table-card\">\n<div class=\"table-head\"><h2>Issues</h2>");
         if (report.issues().isEmpty()) {
-            out.append("<p class=\"ok\">No issues found.</p>\n");
+            out.append("</div>\n<p class=\"empty\">No issues found.</p>\n</section>\n");
             return;
         }
-        out.append("<table>\n<thead><tr><th data-type=\"num\">Line</th><th>Sample ID</th><th>Rule</th>")
-                .append("<th>Severity</th><th>Message</th></tr></thead>\n<tbody>\n");
+        out.append("<span class=\"muted\">Select a column heading to sort</span></div>\n")
+                .append("<div class=\"table-wrap\">\n<table class=\"issues\">\n<thead><tr>")
+                .append("<th scope=\"col\" tabindex=\"0\" data-type=\"num\" data-dir=\"asc\" aria-sort=\"ascending\">Line</th>")
+                .append("<th scope=\"col\" tabindex=\"0\">Sample</th>")
+                .append("<th scope=\"col\" tabindex=\"0\">Severity</th>")
+                .append("<th scope=\"col\" tabindex=\"0\">Rule</th>")
+                .append("<th scope=\"col\" tabindex=\"0\">Message</th>")
+                .append("</tr></thead>\n<tbody>\n");
         for (ValidationIssue issue : report.issues()) {
-            out.append("<tr><td class=\"num\">").append(String.valueOf(issue.line())).append("</td><td>")
-                    .append(escape(issue.sampleId())).append("</td><td>").append(escape(issue.rule()))
-                    .append("</td><td class=\"").append(issue.severity().name()).append("\">")
-                    .append(issue.severity().name()).append("</td><td>").append(escape(issue.message()))
-                    .append("</td></tr>\n");
+            writeIssueRow(issue, out);
         }
-        out.append("</tbody>\n</table>\n");
+        out.append("</tbody>\n</table>\n</div>\n</section>\n");
+    }
+
+    private static void writeIssueRow(ValidationIssue issue, Appendable out) throws IOException {
+        String line = issue.line() > 0 ? String.valueOf(issue.line()) : "File";
+        String sample = issue.sampleId().isEmpty()
+                ? "<span class=\"none\" aria-label=\"none\">\u2014</span>"
+                : escape(issue.sampleId());
+        String severity = issue.severity().name().toLowerCase(Locale.ROOT);
+        out.append("<tr><td class=\"num\" data-value=\"").append(String.valueOf(issue.line())).append("\">")
+                .append(line).append("</td>")
+                .append("<td data-value=\"").append(escape(issue.sampleId())).append("\">").append(sample).append("</td>")
+                .append("<td><span class=\"pill pill-").append(severity).append("\">")
+                .append(sentenceCase(severity)).append("</span></td>")
+                .append("<td class=\"rule\">").append(escape(issue.ruleDisplayName())).append("</td>")
+                .append("<td>").append(escape(issue.message())).append("</td></tr>\n");
+    }
+
+    private static void writeFooter(RunMetadata metadata, Appendable out) throws IOException {
+        out.append("<footer><div class=\"wrap\"><span>Generated by assay-lint v")
+                .append(escape(metadata.toolVersion())).append("</span><span>")
+                .append(TIMESTAMP.format(metadata.runAt())).append("</span></div></footer>\n");
+    }
+
+    private static String plural(long count, String noun) {
+        return count + " " + noun + (count == 1 ? "" : "s");
+    }
+
+    private static String sentenceCase(String word) {
+        return Character.toUpperCase(word.charAt(0)) + word.substring(1);
+    }
+
+    // Reports are often produced on Windows and read elsewhere; forward slashes read the same everywhere.
+    private static String displayPath(String path) {
+        return path.replace('\\', '/');
     }
 
     static String escape(String text) {

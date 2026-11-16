@@ -1,5 +1,6 @@
 package com.mustafakhan.assaylint.report;
 
+import com.mustafakhan.assaylint.model.RuleNames;
 import com.mustafakhan.assaylint.model.Severity;
 import com.mustafakhan.assaylint.model.ValidationIssue;
 import java.io.IOException;
@@ -60,9 +61,10 @@ public final class ConsoleReportWriter implements ReportWriter {
         out.append(style(BOLD, "Summary: " + report.issues().size() + " issue(s)")).append("  ")
                 .append(style(RED, bySeverity.get(Severity.ERROR) + " error(s)")).append(", ")
                 .append(style(YELLOW, bySeverity.get(Severity.WARNING) + " warning(s)")).append(NL);
-        int width = report.countsByRule().keySet().stream().mapToInt(String::length).max().orElse(0);
+        int width = report.countsByRule().keySet().stream().map(RuleNames::displayName).mapToInt(String::length)
+                .max().orElse(0);
         for (Map.Entry<String, Long> entry : report.countsByRule().entrySet()) {
-            out.append("  ").append(pad(entry.getKey(), width)).append("  ")
+            out.append("  ").append(pad(RuleNames.displayName(entry.getKey()), width)).append("  ")
                     .append(String.valueOf(entry.getValue())).append(NL);
         }
         out.append(NL);
@@ -71,12 +73,12 @@ public final class ConsoleReportWriter implements ReportWriter {
     private void writeIssues(List<ValidationIssue> issues, Appendable out) throws IOException {
         Map<Integer, List<ValidationIssue>> byLine = issues.stream()
                 .collect(Collectors.groupingBy(ValidationIssue::line, LinkedHashMap::new, Collectors.toList()));
-        int ruleWidth = issues.stream().mapToInt(issue -> issue.rule().length()).max().orElse(0);
+        int ruleWidth = issues.stream().mapToInt(issue -> issue.ruleDisplayName().length()).max().orElse(0);
         for (Map.Entry<Integer, List<ValidationIssue>> group : byLine.entrySet()) {
             out.append(style(BOLD, lineLabel(group.getKey(), group.getValue().get(0).sampleId()))).append(NL);
             for (ValidationIssue issue : group.getValue()) {
                 out.append("  ").append(severityLabel(issue.severity())).append("  ")
-                        .append(pad(issue.rule(), ruleWidth)).append("  ")
+                        .append(pad(issue.ruleDisplayName(), ruleWidth)).append("  ")
                         .append(issue.message()).append(NL);
             }
         }

@@ -5,6 +5,7 @@ import com.mustafakhan.assaylint.model.ValidationIssue;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -38,11 +39,16 @@ public record Report(RunMetadata metadata, List<ValidationIssue> issues) {
     /**
      * Counts issues per rule, for rules that raised at least one.
      *
-     * @return rule name to count, sorted by rule name
+     * @return rule identifier to count, most frequent first, ties in rule order
      */
     public Map<String, Long> countsByRule() {
-        return issues.stream().collect(Collectors.groupingBy(ValidationIssue::rule, TreeMap::new,
-                Collectors.counting()));
+        Map<String, Long> byName = issues.stream().collect(Collectors.groupingBy(ValidationIssue::rule,
+                TreeMap::new, Collectors.counting()));
+        Map<String, Long> byCount = new LinkedHashMap<>();
+        byName.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .forEachOrdered(entry -> byCount.put(entry.getKey(), entry.getValue()));
+        return byCount;
     }
 
     /**
@@ -53,5 +59,14 @@ public record Report(RunMetadata metadata, List<ValidationIssue> issues) {
      */
     public boolean hasIssuesAtLeast(Severity threshold) {
         return issues.stream().anyMatch(issue -> issue.severity().isAtLeast(threshold));
+    }
+
+    /**
+     * Returns whether the run passed, judged against the run's {@code --fail-on} level.
+     *
+     * @return {@code true} if no issue is at or above {@link RunMetadata#failOn()}
+     */
+    public boolean passed() {
+        return !hasIssuesAtLeast(metadata.failOn());
     }
 }

@@ -31,45 +31,45 @@ assay-lint report
   Input:   examples\samples_with_errors.csv
   SHA-256: 875da7221fe9929b1158ac2741f65dfef055af4569eb346116f127250a78a754
   Config:  examples\assays.json
-  Run at:  2026-11-16T17:48:41Z
+  Run at:  2026-11-16T18:01:59Z
   Rows:    14 read, 12 parsed (10 with issues, 2 clean), 2 could not be parsed
 
 Summary: 13 issue(s)  11 error(s), 2 warning(s)
-  Chronology         1
-  DuplicateSampleId  1
-  NumericValue       1
-  Parse              2
-  Range              2
-  RequiredFields     1
-  Timestamp          2
-  Unit               2
-  UnknownAssay       1
+  Parse                2
+  Range                2
+  Timestamp            2
+  Unit                 2
+  Chronology           1
+  Duplicate sample ID  1
+  Numeric value        1
+  Required fields      1
+  Unknown assay        1
 
 Line 3 (S2001)
-  ERROR    DuplicateSampleId  Duplicate sample_id 'S2001' for assay 'glucose' (first seen on line 2)
+  ERROR    Duplicate sample ID  Duplicate sample_id 'S2001' for assay 'glucose' (first seen on line 2)
 Line 4 (S2002)
-  ERROR    Range              Value 750 is outside the allowed range [0, 600] for assay 'glucose'
+  ERROR    Range                Value 750 is outside the allowed range [0, 600] for assay 'glucose'
 Line 5 (S2003)
-  ERROR    Unit               Unit 'mEq/L' does not match expected unit 'mmol/L' for assay 'potassium'
+  ERROR    Unit                 Unit 'mEq/L' does not match expected unit 'mmol/L' for assay 'potassium'
 Line 6 (S2004)
-  ERROR    NumericValue       Value 'n/a' is not a finite number
+  ERROR    Numeric value        Value 'n/a' is not a finite number
 Line 7 (S2005)
-  ERROR    Timestamp          Timestamp '2026/10/02 10:00' is not a valid ISO-8601 date-time
+  ERROR    Timestamp            Timestamp '2026/10/02 10:00' is not a valid ISO-8601 date-time
 Line 8 (S2006)
-  ERROR    Timestamp          Timestamp 2031-01-01T00:00:00Z is in the future
+  ERROR    Timestamp            Timestamp 2031-01-01T00:00:00Z is in the future
 Line 9 (S2007)
-  ERROR    RequiredFields     Missing required field(s): analyst
+  ERROR    Required fields      Missing required field(s): analyst
 Line 11 (S2008)
-  WARNING  Chronology         Timestamp 2026-10-03T09:00:00Z is earlier than 2026-10-03T14:00:00Z recorded for sample 'S2008' on line 10
+  WARNING  Chronology           Timestamp 2026-10-03T09:00:00Z is earlier than 2026-10-03T14:00:00Z recorded for sample 'S2008' on line 10
 Line 12 (S2009)
-  WARNING  UnknownAssay       Assay 'albumin' is not defined in the config; unit and range were not checked
+  WARNING  Unknown assay        Assay 'albumin' is not defined in the config; unit and range were not checked
 Line 14 (S2010)
-  ERROR    Parse              Expected 6 columns but found 4
+  ERROR    Parse                Expected 6 columns but found 4
 Line 15
-  ERROR    Parse              Malformed row: unterminated quoted field
+  ERROR    Parse                Malformed row: unterminated quoted field
 Line 16 (S2012)
-  ERROR    Range              Value 25 is outside the allowed range [0.1, 20] for assay 'creatinine'
-  ERROR    Unit               Unit 'mg/dl' does not match expected unit 'mg/dL' for assay 'creatinine'
+  ERROR    Range                Value 25 is outside the allowed range [0.1, 20] for assay 'creatinine'
+  ERROR    Unit                 Unit 'mg/dl' does not match expected unit 'mg/dL' for assay 'creatinine'
 ```
 
 The command exits with code `1` because errors were found. Running it against `examples/samples_clean.csv` prints `No issues found.` and exits with `0`.
@@ -87,29 +87,29 @@ assay-lint report
   Input:   examples\instrument_export.csv
   SHA-256: 93b7846803aab67af0e9b48097927d70819c4478e76527023a3fa03f36c4fb09
   Config:  examples\assays.json
-  Run at:  2026-11-16T17:48:41Z
+  Run at:  2026-11-16T18:01:59Z
   Rows:    25 read, 25 parsed (4 with issues, 21 clean), 0 could not be parsed
 
 Summary: 8 issue(s)  4 error(s), 4 warning(s)
-  DuplicateSampleId  1
-  Parse              4
-  Range              1
-  Timestamp          1
-  Unit               1
+  Parse                4
+  Duplicate sample ID  1
+  Range                1
+  Timestamp            1
+  Unit                 1
 
 Line 1
-  WARNING  Parse              Ignoring unknown column 'instrument_id'
-  WARNING  Parse              Ignoring unknown column 'operator_comment'
-  WARNING  Parse              Ignoring unknown column 'qc_flag'
-  WARNING  Parse              Ignoring unknown column 'run_id'
+  WARNING  Parse                Ignoring unknown column 'instrument_id'
+  WARNING  Parse                Ignoring unknown column 'operator_comment'
+  WARNING  Parse                Ignoring unknown column 'qc_flag'
+  WARNING  Parse                Ignoring unknown column 'run_id'
 Line 8 (P-1003)
-  ERROR    Range              Value 11.2 is outside the allowed range [1.5, 10] for assay 'potassium'
+  ERROR    Range                Value 11.2 is outside the allowed range [1.5, 10] for assay 'potassium'
 Line 14 (P-1005)
-  ERROR    Unit               Unit 'mEq/L' does not match expected unit 'mmol/L' for assay 'sodium'
+  ERROR    Unit                 Unit 'mEq/L' does not match expected unit 'mmol/L' for assay 'sodium'
 Line 19 (P-1006)
-  ERROR    DuplicateSampleId  Duplicate sample_id 'P-1006' for assay 'glucose' (first seen on line 17)
+  ERROR    Duplicate sample ID  Duplicate sample_id 'P-1006' for assay 'glucose' (first seen on line 17)
 Line 25 (P-1008)
-  ERROR    Timestamp          Timestamp 2031-03-01T08:31:15 is in the future
+  ERROR    Timestamp            Timestamp 2031-03-01T08:31:15 is in the future
 ```
 
 ## Usage
@@ -136,7 +136,7 @@ Example of producing an HTML report:
 java -jar target/assay-lint.jar validate examples/samples_with_errors.csv --config examples/assays.json --format html --out report.html
 ```
 
-The HTML report is a single file with inline CSS and no external assets. It contains the run details, summary counts and an issues table you can sort by clicking any column header.
+The HTML report is a single file with inline CSS and no external assets, so it can be archived or emailed and still render offline. It opens with a pass/fail banner that respects `--fail-on`, followed by the run details (input, config, SHA-256, row counts), error and warning totals, issues by rule, and an issues table you can sort by any column. It works on small screens and prints cleanly.
 
 ### Exit codes
 
@@ -199,7 +199,7 @@ See [`examples/assays.json`](examples/assays.json) for a six-assay config.
 
 ## Adding a new rule
 
-1. Create a class in `com.mustafakhan.assaylint.rules` that implements `ValidationRule`. Return a short `name()`, and from `check(records, config)` return a `ValidationIssue` for each problem, using `ValidationIssue.of(record, name(), severity, message)`.
+1. Create a class in `com.mustafakhan.assaylint.rules` that implements `ValidationRule`. Return a short camel-case `name()` such as `SampleVolume`; the console and HTML reports show it in sentence case ("Sample volume"), while the JSON report keeps the identifier. From `check(records, config)`, return a `ValidationIssue` for each problem, using `ValidationIssue.of(record, name(), severity, message)`.
 2. Skip blank fields and values another rule already reports, so each problem is reported once.
 3. Add the rule to `RuleEngine.defaultRules(Clock)`.
 4. Add a test class with passing and failing cases using small inline records, and update `examples/samples_with_errors.csv` so the new rule fires there too. `ExamplesTest` checks that every rule fires on that file.

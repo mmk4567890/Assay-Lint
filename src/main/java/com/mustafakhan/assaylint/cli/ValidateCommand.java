@@ -103,7 +103,7 @@ public final class ValidateCommand implements Callable<Integer> {
         List<ValidationIssue> issues = new ArrayList<>(parsed.issues());
         issues.addAll(new RuleEngine(RuleEngine.defaultRules(clock)).run(parsed.records(), rules));
         RunMetadata metadata = new RunMetadata(input.toString(), sha256, config.toString(),
-                RowCounts.of(parsed, issues), clock.instant());
+                RowCounts.of(parsed, issues), failOn, BuildInfo.version(), clock.instant());
         return new Report(metadata, issues);
     }
 

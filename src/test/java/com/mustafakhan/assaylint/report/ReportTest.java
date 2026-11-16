@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mustafakhan.assaylint.model.Severity;
+import com.mustafakhan.assaylint.model.ValidationIssue;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -39,5 +40,23 @@ class ReportTest {
     @Test
     void runTimeIsTruncatedToSeconds() {
         assertEquals(Instant.parse("2026-02-01T09:30:00Z"), report.metadata().runAt());
+    }
+
+    @Test
+    void passOrFailFollowsTheFailOnLevel() {
+        assertFalse(report.passed());
+        assertTrue(Reports.warningsOnly(Severity.ERROR).passed());
+        assertFalse(Reports.warningsOnly(Severity.WARNING).passed());
+        assertTrue(Reports.clean().passed());
+    }
+
+    @Test
+    void ordersRuleCountsByFrequency() {
+        Report mixed = new Report(Reports.METADATA, List.of(
+                new ValidationIssue(2, "S1", "Range", Severity.ERROR, "a"),
+                new ValidationIssue(3, "S2", "Unit", Severity.ERROR, "b"),
+                new ValidationIssue(4, "S3", "Unit", Severity.ERROR, "c")));
+
+        assertEquals(List.of("Unit", "Range"), List.copyOf(mixed.countsByRule().keySet()));
     }
 }

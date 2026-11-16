@@ -33,6 +33,16 @@ public record ValidationIssue(int line, String sampleId, String rule, Severity s
         return new ValidationIssue(record.line(), record.sampleId(), rule, severity, message);
     }
 
+    /**
+     * Returns the rule name as people read it, for example {@code "Duplicate sample ID"}
+     * for the {@code DuplicateSampleId} rule.
+     *
+     * @return the human-readable rule name
+     */
+    public String ruleDisplayName() {
+        return RuleNames.displayName(rule);
+    }
+
     /** Rejects null fields so report writers never have to null-check. */
     public ValidationIssue {
         Objects.requireNonNull(sampleId, "sampleId");

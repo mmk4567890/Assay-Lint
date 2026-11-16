@@ -30,7 +30,7 @@ class ConsoleReportWriterTest {
         String text = render(Reports.withIssues(), false);
 
         assertTrue(text.contains("Summary: 4 issue(s)  2 error(s), 2 warning(s)"), text);
-        assertTrue(text.contains("  UnknownAssay  1"), text);
+        assertTrue(text.contains("  Unknown assay  1"), text);
     }
 
     @Test
@@ -39,8 +39,8 @@ class ConsoleReportWriterTest {
         String nl = System.lineSeparator();
 
         assertTrue(text.contains("Line 2 (S1)" + nl
-                + "  ERROR    Range         Value 700 is outside the range" + nl
-                + "  WARNING  UnknownAssay  Assay <x> & \"y\" is unknown" + nl), text);
+                + "  ERROR    Range          Value 700 is outside the range" + nl
+                + "  WARNING  Unknown assay  Assay <x> & \"y\" is unknown" + nl), text);
         assertTrue(text.contains("File" + nl + "  WARNING  Parse"), text);
     }
 

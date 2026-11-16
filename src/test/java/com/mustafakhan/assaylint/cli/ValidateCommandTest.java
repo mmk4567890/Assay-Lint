@@ -189,6 +189,22 @@ class ValidateCommandTest {
     }
 
     @Test
+    void htmlBannerFollowsFailOnAndShowsBuildVersion() throws IOException {
+        Path file = csv("S1,albumin,4,g/dL,2026-01-05T10:00:00Z,jdoe\n");
+        Path report = dir.resolve("report.html");
+
+        validate(file, "--format", "html", "--out", report.toString());
+        String passed = Files.readString(report);
+        validate(file, "--format", "html", "--out", report.toString(), "--fail-on", "warning");
+        String failed = Files.readString(report);
+
+        assertTrue(passed.contains(">Passed with warnings<"));
+        assertTrue(failed.contains("Failed"));
+        assertFalse(BuildInfo.version().equals("unknown"));
+        assertTrue(passed.contains("<span class=\"version\">v" + BuildInfo.version() + "</span>"));
+    }
+
+    @Test
     void missingInputExitsTwo() {
         assertEquals(ExitCodes.BAD_INPUT, validate(dir.resolve("missing.csv")));
         assertTrue(err.toString().contains("input file not found"));
