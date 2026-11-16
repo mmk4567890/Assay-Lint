@@ -26,7 +26,7 @@ public final class RuleEngine {
      * @return all built-in rules
      */
     public static List<ValidationRule> defaultRules() {
-        return List.of(new RequiredFieldsRule(), new DuplicateSampleIdRule(), new NumericValueRule(), new RangeRule());
+        return List.of(new RequiredFieldsRule(), new DuplicateSampleIdRule(), new NumericValueRule(), new RangeRule(), new UnitRule());
     }
 
     /**
