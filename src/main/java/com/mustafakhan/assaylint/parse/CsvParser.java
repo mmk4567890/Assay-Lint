@@ -26,10 +26,11 @@ import java.util.Set;
  * Blank lines are skipped, the header may list columns in any order, and a file
  * without a header is read in the default column order with a warning. Rows that
  * cannot be read (wrong column count, broken quoting) are reported as issues with
- * their line number rather than aborting the run. A header that names the wrong
- * columns is the exception: no row can be mapped safely, so parsing stops with an
- * {@link InvalidHeaderException}. Field values are not interpreted here; that is
- * left to the validation rules.
+ * their line number rather than aborting the run. Extra header columns, common in
+ * instrument exports, are skipped with a warning. A header that misses or repeats a
+ * required column is the exception: no row can be mapped safely, so parsing stops
+ * with an {@link InvalidHeaderException}. Field values are not interpreted here;
+ * that is left to the validation rules.
  *
  * <p>Each physical line is one record, so quoted fields cannot span lines.
  */
@@ -77,6 +78,7 @@ public final class CsvParser {
         private final List<SampleRecord> records = new ArrayList<>();
         private final List<ValidationIssue> issues = new ArrayList<>();
         private Map<String, Integer> columnIndex;
+        private int columnCount;
         private int dataRows;
 
         ParseResult run(BufferedReader reader) throws IOException, InvalidHeaderException {
@@ -128,7 +130,8 @@ public final class CsvParser {
             for (int i = 0; i < fields.size(); i++) {
                 String name = normalize(fields.get(i));
                 if (!COLUMNS.contains(name)) {
-                    problems.add("unexpected column '" + fields.get(i).trim() + "'");
+                    issues.add(new ValidationIssue(lineNumber, "", RULE_NAME, Severity.WARNING,
+                            ignoredColumnMessage(fields.get(i).trim(), i)));
                 } else if (index.putIfAbsent(name, i) != null) {
                     problems.add("duplicate column '" + name + "'");
                 }
@@ -143,6 +146,13 @@ public final class CsvParser {
                         + String.join(", ", problems));
             }
             columnIndex = index;
+            columnCount = fields.size();
+        }
+
+        private static String ignoredColumnMessage(String name, int index) {
+            return name.isEmpty()
+                    ? "Ignoring unnamed column " + (index + 1)
+                    : "Ignoring unknown column '" + name + "'";
         }
 
         private void useDefaultColumns(int lineNumber) {
@@ -150,14 +160,15 @@ public final class CsvParser {
             for (int i = 0; i < COLUMNS.size(); i++) {
                 columnIndex.put(COLUMNS.get(i), i);
             }
+            columnCount = COLUMNS.size();
             issues.add(new ValidationIssue(lineNumber, "", RULE_NAME, Severity.WARNING,
                     "Header row missing; assuming column order " + String.join(", ", COLUMNS)));
         }
 
         private void readRow(int lineNumber, List<String> fields) {
             dataRows++;
-            if (fields.size() != COLUMNS.size()) {
-                issues.add(error(lineNumber, field(fields, "sample_id"), "Expected " + COLUMNS.size()
+            if (fields.size() != columnCount) {
+                issues.add(error(lineNumber, field(fields, "sample_id"), "Expected " + columnCount
                         + " columns but found " + fields.size()));
                 return;
             }

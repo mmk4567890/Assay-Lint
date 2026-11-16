@@ -156,8 +156,7 @@ class ValidateCommandTest {
     @ParameterizedTest
     @ValueSource(strings = {
         "sample_id,assay,value,unit,timestamp",
-        "sample_id,sample_id,assay,value,unit,timestamp,analyst",
-        "sample_id,assay,value,unit,timestamp,analyst,notes"
+        "sample_id,sample_id,assay,value,unit,timestamp,analyst"
     })
     void badHeaderExitsTwo(String header) throws IOException {
         Path file = Files.writeString(dir.resolve("bad-header.csv"),
@@ -166,6 +165,17 @@ class ValidateCommandTest {
         assertEquals(ExitCodes.BAD_INPUT, validate(file));
         assertTrue(err.toString().contains("Invalid header on line 1"), err.toString());
         assertEquals("", out.toString());
+    }
+
+    @Test
+    void unknownColumnOnlyWarnsSoTheRunContinues() throws IOException {
+        Path file = Files.writeString(dir.resolve("extra-column.csv"),
+                "sample_id,assay,value,unit,timestamp,analyst,comment\n"
+                        + "S1,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe,rerun\n");
+
+        assertEquals(ExitCodes.OK, validate(file, "--no-color"));
+        assertTrue(out.toString().contains("Ignoring unknown column 'comment'"), out.toString());
+        assertEquals(ExitCodes.ISSUES_FOUND, validate(file, "--fail-on", "warning"));
     }
 
     @Test

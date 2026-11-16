@@ -1,8 +1,8 @@
 package com.mustafakhan.assaylint.parse;
 
 /**
- * Thrown when a file's header row is present but unusable: a required column is
- * missing or repeated, or an unknown column appears. Without a trustworthy column
+ * Thrown when a file's header row is present but unusable because a required
+ * column is missing or repeated. Without a trustworthy column
  * mapping no row can be read safely, so this is treated as bad input rather than
  * as a data issue.
  */

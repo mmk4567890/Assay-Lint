@@ -92,12 +92,34 @@ class CsvParserTest {
     }
 
     @Test
-    void headerWithDuplicateOrUnknownColumnIsRejected() {
+    void headerWithDuplicateColumnIsRejected() {
         InvalidHeaderException e = assertThrows(InvalidHeaderException.class,
-                () -> parse("sample_id,sample_id,assay,value,unit,timestamp,analyst,notes\n"));
+                () -> parse("sample_id,sample_id,assay,value,unit,timestamp,analyst\n"));
 
-        assertTrue(e.getMessage().contains("duplicate column 'sample_id'"), e.getMessage());
-        assertTrue(e.getMessage().contains("unexpected column 'notes'"), e.getMessage());
+        assertEquals("Invalid header on line 1: duplicate column 'sample_id'", e.getMessage());
+    }
+
+    @Test
+    void unknownHeaderColumnsAreSkippedWithAWarning() throws Exception {
+        ParseResult result = parse("sample_id,comment,assay,value,unit,timestamp,analyst,\n"
+                + "S1,rerun,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe,\n");
+
+        assertEquals(new SampleRecord(2, "S1", "glucose", "95", "mg/dL", "2026-01-05T10:00:00Z", "jdoe"),
+                result.records().get(0));
+        assertEquals(2, result.issues().size());
+        ValidationIssue comment = result.issues().get(0);
+        assertEquals(1, comment.line());
+        assertEquals(Severity.WARNING, comment.severity());
+        assertEquals("Ignoring unknown column 'comment'", comment.message());
+        assertEquals("Ignoring unnamed column 8", result.issues().get(1).message());
+    }
+
+    @Test
+    void rowsMustMatchHeaderWidthIncludingExtraColumns() throws Exception {
+        ParseResult result = parse("sample_id,assay,value,unit,timestamp,analyst,comment\n" + ROW);
+
+        assertTrue(result.records().isEmpty());
+        assertEquals("Expected 7 columns but found 6", result.issues().get(1).message());
     }
 
     @Test
