@@ -8,7 +8,13 @@ assay-lint is a command-line tool that checks laboratory sample data files (CSV)
 
 ## Quick start
 
-Requires Java 17 and Maven.
+**Download:** get the prebuilt [`assay-lint.jar`](https://github.com/mmk4567890/assay-lint/releases/latest/download/assay-lint.jar) from the [latest release](https://github.com/mmk4567890/assay-lint/releases/latest) and run it with Java 17. No build needed:
+
+```bash
+java -jar assay-lint.jar validate samples.csv --config assays.json
+```
+
+To build from source instead (requires Java 17 and Maven):
 
 ```bash
 mvn -B verify
