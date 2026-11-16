@@ -6,7 +6,7 @@
 
     <groupId>com.mustafakhan</groupId>
     <artifactId>assay-lint</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>assay-lint</name>
