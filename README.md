@@ -144,6 +144,12 @@ Error: Invalid config assays.json: assay 'ph': min (14) is greater than max (0)
 
 See [`examples/assays.json`](examples/assays.json) for a six-assay config.
 
+## Known limitations
+
+- **No line breaks inside quoted fields.** Each physical line is one record. A quoted field that continues onto the next line is reported as a malformed row (unterminated quote), and the following line is read as a new record.
+- **Timestamps without a time zone are read as UTC.** `2026-10-01T08:15:00` is treated as `2026-10-01T08:15:00Z`. If your instruments record local time, include the offset (for example `+02:00`) so the future and chronology checks compare the right instants.
+- **Assay and unit names are case-sensitive.** `Glucose` is not the same assay as `glucose`, and `mg/dl` does not match `mg/dL`. Column names in the header are the exception: they are matched case-insensitively.
+
 ## Adding a new rule
 
 1. Create a class in `com.mustafakhan.assaylint.rules` that implements `ValidationRule`. Return a short `name()`, and from `check(records, config)` return a `ValidationIssue` for each problem, using `ValidationIssue.of(record, name(), severity, message)`.
