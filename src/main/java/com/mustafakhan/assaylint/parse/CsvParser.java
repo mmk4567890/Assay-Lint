@@ -149,7 +149,8 @@ public final class CsvParser {
             return fields.stream().map(Session::normalize).anyMatch(COLUMNS::contains);
         }
 
-        private void readHeader(int lineNumber, List<String> fields) throws CsvFormatException {
+        private void readHeader(int lineNumber, List<String> headerFields) throws CsvFormatException {
+            List<String> fields = withoutTrailingEmptyField(headerFields);
             Map<String, Integer> index = new HashMap<>();
             Set<String> problems = new LinkedHashSet<>();
             for (int i = 0; i < fields.size(); i++) {
@@ -174,6 +175,16 @@ public final class CsvParser {
             columnCount = fields.size();
         }
 
+        /**
+         * Drops one empty last field, the mark of a line that ends in a stray comma.
+         * Spreadsheet exports add these often, and they carry no data.
+         */
+        private static List<String> withoutTrailingEmptyField(List<String> fields) {
+            return fields.size() > 1 && fields.get(fields.size() - 1).isBlank()
+                    ? fields.subList(0, fields.size() - 1)
+                    : fields;
+        }
+
         private static String ignoredColumnMessage(String name, int index) {
             return name.isEmpty()
                     ? "Ignoring unnamed column " + (index + 1)
@@ -190,8 +201,9 @@ public final class CsvParser {
                     "Header row missing; assuming column order " + String.join(", ", COLUMNS)));
         }
 
-        private void readRow(int lineNumber, List<String> fields) {
+        private void readRow(int lineNumber, List<String> rowFields) {
             dataRows++;
+            List<String> fields = rowFields.size() == columnCount + 1 ? withoutTrailingEmptyField(rowFields) : rowFields;
             if (fields.size() != columnCount) {
                 issues.add(error(lineNumber, field(fields, "sample_id"), "Expected " + columnCount
                         + " columns but found " + fields.size()));

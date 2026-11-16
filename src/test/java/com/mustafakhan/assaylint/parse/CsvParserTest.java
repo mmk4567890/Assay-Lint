@@ -110,8 +110,8 @@ class CsvParserTest {
 
     @Test
     void unknownHeaderColumnsAreSkippedWithAWarning() throws Exception {
-        ParseResult result = parse("sample_id,comment,assay,value,unit,timestamp,analyst,\n"
-                + "S1,rerun,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe,\n");
+        ParseResult result = parse("sample_id,comment,assay,,value,unit,timestamp,analyst\n"
+                + "S1,rerun,glucose,x,95,mg/dL,2026-01-05T10:00:00Z,jdoe\n");
 
         assertEquals(new SampleRecord(2, "S1", "glucose", "95", "mg/dL", "2026-01-05T10:00:00Z", "jdoe"),
                 result.records().get(0));
@@ -120,7 +120,34 @@ class CsvParserTest {
         assertEquals(1, comment.line());
         assertEquals(Severity.WARNING, comment.severity());
         assertEquals("Ignoring unknown column 'comment'", comment.message());
-        assertEquals("Ignoring unnamed column 8", result.issues().get(1).message());
+        assertEquals("Ignoring unnamed column 4", result.issues().get(1).message());
+    }
+
+    @Test
+    void acceptsTrailingCommaOnHeaderAndRows() throws Exception {
+        ParseResult result = parse("sample_id,assay,value,unit,timestamp,analyst,\n"
+                + "S1,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe,\n"
+                + "S2,glucose,96,mg/dL,2026-01-05T10:00:00Z,jdoe\n");
+
+        assertTrue(result.issues().isEmpty());
+        assertEquals(2, result.records().size());
+        assertEquals("jdoe", result.records().get(0).analyst());
+    }
+
+    @Test
+    void acceptsTrailingCommaWithoutHeaderAndWithExtraColumns() throws Exception {
+        assertEquals(1, parse(ROW.replace("\n", ",\n")).records().size());
+        assertEquals(1, parse("sample_id,assay,value,unit,timestamp,analyst,comment\n"
+                + "S1,glucose,95,mg/dL,2026-01-05T10:00:00Z,jdoe,rerun,\n").records().size());
+    }
+
+    @Test
+    void onlyOneEmptyTrailingFieldIsForgiven() throws Exception {
+        ParseResult twoCommas = parse(HEADER + ROW.replace("\n", ",,\n"));
+        ParseResult nonEmptyExtra = parse(HEADER + ROW.replace("\n", ",x\n"));
+
+        assertEquals("Expected 6 columns but found 8", twoCommas.issues().get(0).message());
+        assertEquals("Expected 6 columns but found 7", nonEmptyExtra.issues().get(0).message());
     }
 
     @Test
