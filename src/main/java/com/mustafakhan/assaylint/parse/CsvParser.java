@@ -29,7 +29,7 @@ import java.util.Set;
  * their line number rather than aborting the run. Extra header columns, common in
  * instrument exports, are skipped with a warning. A header that misses or repeats a
  * required column is the exception: no row can be mapped safely, so parsing stops
- * with an {@link InvalidHeaderException}. Field values are not interpreted here;
+ * with an {@link CsvFormatException}. Field values are not interpreted here;
  * that is left to the validation rules.
  *
  * <p>Each physical line is one record, so quoted fields cannot span lines.
@@ -43,7 +43,10 @@ public final class CsvParser {
     public static final List<String> COLUMNS =
             List.of("sample_id", "assay", "value", "unit", "timestamp", "analyst");
 
-    private static final char BYTE_ORDER_MARK = '﻿';
+    private static final char COMMA = ',';
+    private static final char TAB = '\t';
+    private static final char SEMICOLON = ';';
+    private static final char BYTE_ORDER_MARK = '\uFEFF';
     private static final int FILE_LEVEL = 0;
 
     /**
@@ -53,9 +56,10 @@ public final class CsvParser {
      * @param file the CSV file to read
      * @return the parsed records and any structural issues
      * @throws IOException            if the file cannot be read
-     * @throws InvalidHeaderException if the header row names the wrong columns
+     * @throws CsvFormatException     if the file is not comma-separated or its header misses or repeats a
+     *                                required column
      */
-    public ParseResult parse(Path file) throws IOException, InvalidHeaderException {
+    public ParseResult parse(Path file) throws IOException, CsvFormatException {
         try (Reader reader = new InputStreamReader(Files.newInputStream(file), StandardCharsets.UTF_8)) {
             return parse(reader);
         }
@@ -67,9 +71,10 @@ public final class CsvParser {
      * @param reader source of CSV text; not closed by this method
      * @return the parsed records and any structural issues
      * @throws IOException            if reading fails
-     * @throws InvalidHeaderException if the header row names the wrong columns
+     * @throws CsvFormatException     if the file is not comma-separated or its header misses or repeats a
+     *                                required column
      */
-    public ParseResult parse(Reader reader) throws IOException, InvalidHeaderException {
+    public ParseResult parse(Reader reader) throws IOException, CsvFormatException {
         return new Session().run(new BufferedReader(reader));
     }
 
@@ -80,8 +85,9 @@ public final class CsvParser {
         private Map<String, Integer> columnIndex;
         private int columnCount;
         private int dataRows;
+        private boolean delimiterChecked;
 
-        ParseResult run(BufferedReader reader) throws IOException, InvalidHeaderException {
+        ParseResult run(BufferedReader reader) throws IOException, CsvFormatException {
             int lineNumber = 0;
             String line;
             while ((line = reader.readLine()) != null) {
@@ -92,13 +98,33 @@ public final class CsvParser {
                 if (line.isBlank()) {
                     continue;
                 }
+                if (!delimiterChecked) {
+                    requireCommaSeparated(line);
+                    delimiterChecked = true;
+                }
                 handleLine(lineNumber, line);
             }
             addFileLevelIssues();
             return new ParseResult(records, issues, dataRows);
         }
 
-        private void handleLine(int lineNumber, String line) throws InvalidHeaderException {
+        // A tab- or semicolon-separated file would otherwise parse as one column per
+        // line and bury the real cause under an error on every row.
+        private static void requireCommaSeparated(String line) throws CsvFormatException {
+            if (line.indexOf(COMMA) >= 0) {
+                return;
+            }
+            long tabs = line.chars().filter(c -> c == TAB).count();
+            long semicolons = line.chars().filter(c -> c == SEMICOLON).count();
+            if (tabs == 0 && semicolons == 0) {
+                return;
+            }
+            String found = tabs >= semicolons ? "tabs" : "';'";
+            throw new CsvFormatException("File does not appear to be comma-separated (found " + found
+                    + "). Save it as CSV with commas.");
+        }
+
+        private void handleLine(int lineNumber, String line) throws CsvFormatException {
             List<String> fields;
             try {
                 fields = CsvLineSplitter.split(line);
@@ -124,7 +150,7 @@ public final class CsvParser {
             return fields.stream().map(Session::normalize).anyMatch(COLUMNS::contains);
         }
 
-        private void readHeader(int lineNumber, List<String> fields) throws InvalidHeaderException {
+        private void readHeader(int lineNumber, List<String> fields) throws CsvFormatException {
             Map<String, Integer> index = new HashMap<>();
             Set<String> problems = new LinkedHashSet<>();
             for (int i = 0; i < fields.size(); i++) {
@@ -142,7 +168,7 @@ public final class CsvParser {
                 }
             }
             if (!problems.isEmpty()) {
-                throw new InvalidHeaderException("Invalid header on line " + lineNumber + ": "
+                throw new CsvFormatException("Invalid header on line " + lineNumber + ": "
                         + String.join(", ", problems));
             }
             columnIndex = index;

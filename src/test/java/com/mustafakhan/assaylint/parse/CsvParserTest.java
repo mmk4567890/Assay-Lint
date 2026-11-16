@@ -93,7 +93,7 @@ class CsvParserTest {
 
     @Test
     void headerMissingColumnIsRejected() {
-        InvalidHeaderException e = assertThrows(InvalidHeaderException.class,
+        CsvFormatException e = assertThrows(CsvFormatException.class,
                 () -> parse("\nsample_id,assay,value,unit,timestamp\n" + ROW));
 
         assertEquals("Invalid header on line 2: missing column 'analyst'", e.getMessage());
@@ -101,7 +101,7 @@ class CsvParserTest {
 
     @Test
     void headerWithDuplicateColumnIsRejected() {
-        InvalidHeaderException e = assertThrows(InvalidHeaderException.class,
+        CsvFormatException e = assertThrows(CsvFormatException.class,
                 () -> parse("sample_id,sample_id,assay,value,unit,timestamp,analyst\n"));
 
         assertEquals("Invalid header on line 1: duplicate column 'sample_id'", e.getMessage());
@@ -184,6 +184,39 @@ class CsvParserTest {
 
         assertEquals(Severity.WARNING, result.issues().get(0).severity());
         assertEquals("File contains no data rows", result.issues().get(0).message());
+    }
+
+    @Test
+    void rejectsSemicolonSeparatedFile() {
+        CsvFormatException e = assertThrows(CsvFormatException.class,
+                () -> parse(HEADER.replace(',', ';') + ROW.replace(',', ';')));
+
+        assertEquals("File does not appear to be comma-separated (found ';'). Save it as CSV with commas.",
+                e.getMessage());
+    }
+
+    @Test
+    void rejectsTabSeparatedFileEvenAfterBlankLines() {
+        CsvFormatException e = assertThrows(CsvFormatException.class,
+                () -> parse("\n\n" + HEADER.replace(',', '\t') + ROW.replace(',', '\t')));
+
+        assertEquals("File does not appear to be comma-separated (found tabs). Save it as CSV with commas.",
+                e.getMessage());
+    }
+
+    @Test
+    void semicolonsInsideACommaSeparatedFileAreFine() throws Exception {
+        ParseResult result = parse(HEADER + "S1,glucose,95,mg/dL,2026-01-05T10:00:00Z,\"Doe; J.\"\n");
+
+        assertTrue(result.issues().isEmpty());
+        assertEquals("Doe; J.", result.records().get(0).analyst());
+    }
+
+    @Test
+    void singleColumnLineWithoutSeparatorsIsNotTreatedAsWrongDelimiter() throws Exception {
+        ParseResult result = parse("S1\n");
+
+        assertEquals("Expected 6 columns but found 1", result.issues().get(1).message());
     }
 
     @Test

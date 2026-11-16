@@ -98,7 +98,7 @@ The HTML report is a single file with inline CSS and no external assets. It cont
 |---|---|
 | `0` | No issues at or above the `--fail-on` level. |
 | `1` | At least one issue at or above the `--fail-on` level. |
-| `2` | Bad input: invalid arguments, a missing or unreadable input file, an invalid config, or a header with a missing or duplicate required column. |
+| `2` | Bad input: invalid arguments, a missing or unreadable input file, an invalid config, a file that is not comma-separated, or a header with a missing or duplicate required column. |
 
 ### Input format
 
@@ -146,6 +146,7 @@ See [`examples/assays.json`](examples/assays.json) for a six-assay config.
 
 ## Known limitations
 
+- **Commas only.** Tab- and semicolon-separated files are not supported. If the first non-blank line has no commas but does have tabs or semicolons, the run stops with exit code `2` and asks you to save the file as comma-separated CSV.
 - **No line breaks inside quoted fields.** Each physical line is one record. A quoted field that continues onto the next line is reported as a malformed row (unterminated quote), and the following line is read as a new record.
 - **Timestamps without a time zone are read as UTC.** `2026-10-01T08:15:00` is treated as `2026-10-01T08:15:00Z`. If your instruments record local time, include the offset (for example `+02:00`) so the future and chronology checks compare the right instants.
 - **Assay and unit names are case-sensitive.** `Glucose` is not the same assay as `glucose`, and `mg/dl` does not match `mg/dL`. Column names in the header are the exception: they are matched case-insensitively.

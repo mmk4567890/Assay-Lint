@@ -168,6 +168,16 @@ class ValidateCommandTest {
     }
 
     @Test
+    void semicolonSeparatedFileExitsTwo() throws IOException {
+        Path file = Files.writeString(dir.resolve("semicolons.csv"),
+                "sample_id;assay;value;unit;timestamp;analyst\nS1;glucose;95;mg/dL;2026-01-05T10:00:00Z;jdoe\n");
+
+        assertEquals(ExitCodes.BAD_INPUT, validate(file));
+        assertTrue(err.toString().contains("File does not appear to be comma-separated (found ';')"), err.toString());
+        assertEquals("", out.toString());
+    }
+
+    @Test
     void unknownColumnOnlyWarnsSoTheRunContinues() throws IOException {
         Path file = Files.writeString(dir.resolve("extra-column.csv"),
                 "sample_id,assay,value,unit,timestamp,analyst,comment\n"

@@ -7,7 +7,7 @@ import com.mustafakhan.assaylint.model.ParseResult;
 import com.mustafakhan.assaylint.model.Severity;
 import com.mustafakhan.assaylint.model.ValidationIssue;
 import com.mustafakhan.assaylint.parse.CsvParser;
-import com.mustafakhan.assaylint.parse.InvalidHeaderException;
+import com.mustafakhan.assaylint.parse.CsvFormatException;
 import com.mustafakhan.assaylint.report.FileHasher;
 import com.mustafakhan.assaylint.report.Report;
 import com.mustafakhan.assaylint.report.ReportFormat;
@@ -87,7 +87,7 @@ public final class ValidateCommand implements Callable<Integer> {
         } catch (ConfigException e) {
             err.println("Error: " + e.getMessage());
             return ExitCodes.BAD_INPUT;
-        } catch (InvalidHeaderException e) {
+        } catch (CsvFormatException e) {
             err.println("Error: " + input + ": " + e.getMessage());
             return ExitCodes.BAD_INPUT;
         } catch (IOException e) {
@@ -96,7 +96,7 @@ public final class ValidateCommand implements Callable<Integer> {
         }
     }
 
-    private Report validate(RuleConfig rules) throws IOException, InvalidHeaderException {
+    private Report validate(RuleConfig rules) throws IOException, CsvFormatException {
         String sha256 = FileHasher.sha256(input);
         ParseResult parsed = new CsvParser().parse(input);
         List<ValidationIssue> issues = new ArrayList<>(parsed.issues());
