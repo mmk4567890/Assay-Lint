@@ -66,6 +66,44 @@ Line 16 (S2012)
 
 The command exits with code `1` because errors were found. Running it against `examples/samples_clean.csv` prints `No issues found.` and exits with `0`.
 
+## Validating an instrument export
+
+[`examples/instrument_export.csv`](examples/instrument_export.csv) is laid out like a real analyzer export. It has instrument and run IDs, a QC flag and free-text operator comments alongside the six required columns, in the analyzer's own column order. It also starts with a byte-order mark, uses Windows line endings, and has quoted comments that contain commas. The extra columns are skipped with a warning, and the run surfaces the four genuine problems in the data:
+
+```bash
+java -jar target/assay-lint.jar validate examples/instrument_export.csv --config examples/assays.json
+```
+
+```text
+assay-lint report
+  Input:   examples\instrument_export.csv
+  SHA-256: 93b7846803aab67af0e9b48097927d70819c4478e76527023a3fa03f36c4fb09
+  Config:  examples\assays.json
+  Run at:  2026-11-16T17:46:41Z
+  Rows:    25 read, 25 parsed, 5 with issues
+
+Summary: 8 issue(s)  4 error(s), 4 warning(s)
+  DuplicateSampleId  1
+  Parse              4
+  Range              1
+  Timestamp          1
+  Unit               1
+
+Line 1
+  WARNING  Parse              Ignoring unknown column 'instrument_id'
+  WARNING  Parse              Ignoring unknown column 'operator_comment'
+  WARNING  Parse              Ignoring unknown column 'qc_flag'
+  WARNING  Parse              Ignoring unknown column 'run_id'
+Line 8 (P-1003)
+  ERROR    Range              Value 11.2 is outside the allowed range [1.5, 10] for assay 'potassium'
+Line 14 (P-1005)
+  ERROR    Unit               Unit 'mEq/L' does not match expected unit 'mmol/L' for assay 'sodium'
+Line 19 (P-1006)
+  ERROR    DuplicateSampleId  Duplicate sample_id 'P-1006' for assay 'glucose' (first seen on line 17)
+Line 25 (P-1008)
+  ERROR    Timestamp          Timestamp 2031-03-01T08:31:15 is in the future
+```
+
 ## Usage
 
 ```text

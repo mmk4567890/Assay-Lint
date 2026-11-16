@@ -1,0 +1,26 @@
+﻿instrument_id,run_id,timestamp,sample_id,assay,value,unit,qc_flag,analyst,operator_comment
+AU5800-01,R20261014-01,2026-10-14T08:02:11,P-1001,glucose,98,mg/dL,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:02:40,P-1001,potassium,4.2,mmol/L,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:03:05,P-1001,sodium,140,mmol/L,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:05:12,P-1002,glucose,132,mg/dL,H,mlee,"fasting status unknown, flagged high"
+AU5800-01,R20261014-01,2026-10-14T08:05:40,P-1002,creatinine,1.04,mg/dL,OK,mlee,
+XN-1000-02,R20261014-07,2026-10-14T08:06:02,P-1002,hemoglobin,12.9,g/dL,OK,rpatel,
+AU5800-01,R20261014-01,2026-10-14T08:08:15,P-1003,potassium,11.2,mmol/L,H,mlee,"hemolyzed, recollection requested"
+AU5800-01,R20261014-01,2026-10-14T08:08:44,P-1003,sodium,137,mmol/L,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:09:10,P-1003,glucose,87,mg/dL,OK,mlee,
+XN-1000-02,R20261014-07,2026-10-14T08:11:30,P-1004,hemoglobin,14.6,g/dL,OK,rpatel,"label read as ""P-1004"", verified by hand"
+AU5800-01,R20261014-01,2026-10-14T08:11:58,P-1004,creatinine,0.88,mg/dL,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:12:20,P-1004,potassium,3.9,mmol/L,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:14:02,P-1005,sodium,143,mEq/L,OK,mlee,"legacy method setting, units not converted"
+AU5800-01,R20261014-01,2026-10-14T08:14:31,P-1005,glucose,104,mg/dL,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:14:55,P-1005,creatinine,0.95,mg/dL,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:17:10,P-1006,glucose,76,mg/dL,OK,mlee,
+XN-1000-02,R20261014-07,2026-10-14T08:17:42,P-1006,hemoglobin,13.3,g/dL,OK,rpatel,
+AU5800-01,R20261014-01,2026-10-14T08:25:03,P-1006,glucose,78,mg/dL,OK,mlee,"rerun, same aliquot"
+AU5800-01,R20261014-01,2026-10-14T08:27:15,P-1007,potassium,4.6,mmol/L,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:27:44,P-1007,sodium,139,mmol/L,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:28:10,P-1007,creatinine,1.21,mg/dL,OK,mlee,
+AU5800-01,R20261014-01,2026-10-14T08:30:22,P-1008,glucose,112,mg/dL,OK,mlee,
+XN-1000-02,R20261014-07,2026-10-14T08:30:50,P-1008,hemoglobin,15.1,g/dL,OK,rpatel,
+AU5800-01,R20261014-01,2031-03-01T08:31:15,P-1008,creatinine,0.79,mg/dL,OK,mlee,"instrument clock reset after service"
+AU5800-01,R20261014-01,2026-10-14T08:33:40,P-1009,sodium,141,mmol/L,OK,mlee,
