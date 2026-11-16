@@ -7,6 +7,7 @@ import com.mustafakhan.assaylint.config.RuleConfig;
 import com.mustafakhan.assaylint.model.SampleRecord;
 import com.mustafakhan.assaylint.model.Severity;
 import com.mustafakhan.assaylint.model.ValidationIssue;
+import java.time.Clock;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +25,13 @@ class RuleEngineTest {
                 return List.of(new ValidationIssue(line, "S" + line, name, Severity.ERROR, "problem"));
             }
         };
+    }
+
+    @Test
+    void defaultRulesHaveDistinctNames() {
+        List<String> names = RuleEngine.defaultRules(Clock.systemUTC()).stream().map(ValidationRule::name).toList();
+
+        assertEquals(8, names.stream().distinct().count());
     }
 
     @Test

@@ -28,7 +28,15 @@ public final class RuleEngine {
      * @return all built-in rules
      */
     public static List<ValidationRule> defaultRules(Clock clock) {
-        return List.of(new RequiredFieldsRule(), new DuplicateSampleIdRule(), new NumericValueRule(), new RangeRule(), new UnitRule(), new TimestampRule(clock), new ChronologyRule());
+        return List.of(
+                new RequiredFieldsRule(),
+                new DuplicateSampleIdRule(),
+                new NumericValueRule(),
+                new RangeRule(),
+                new UnitRule(),
+                new TimestampRule(clock),
+                new ChronologyRule(),
+                new UnknownAssayRule());
     }
 
     /**
