@@ -105,7 +105,7 @@ The HTML report is a single file with inline CSS and no external assets. It cont
 The CSV must have the columns `sample_id`, `assay`, `value`, `unit`, `timestamp` and `analyst`.
 
 - **Header.** The header may list the columns in any order, and names are matched case-insensitively. If the header is missing, the default column order is assumed and a warning is reported. Extra columns, such as a `comment` column from an instrument export, are skipped with a warning (`Ignoring unknown column 'comment'`), and every row must then have the same number of columns as the header. A header with a missing or duplicate required column stops the run with exit code `2`: without a reliable column mapping, no row can be read safely.
-- **Fields and lines.** Fields may be quoted, which allows commas inside them, and `""` stands for a literal quote. Each line is one record, so a quoted field cannot span lines. Blank lines are ignored, and both LF and CRLF line endings work.
+- **Fields and lines.** Fields may be quoted, which allows commas inside them, and `""` stands for a literal quote. Spaces or tabs before an opening quote or after a closing quote are ignored, so `jdoe, "Nguyen, T."` is two fields. Each line is one record, so a quoted field cannot span lines. Blank lines are ignored, and both LF and CRLF line endings work.
 - **Malformed rows.** A row with the wrong number of columns or broken quoting is reported with its line number, and validation continues with the next row.
 - **Timestamps.** They must be ISO-8601 date-times, such as `2026-10-01T08:15:00Z` or `2026-10-01T10:00:00+02:00`. A timestamp without an offset is read as UTC.
 

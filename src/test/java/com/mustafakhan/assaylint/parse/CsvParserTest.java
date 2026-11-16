@@ -61,6 +61,14 @@ class CsvParserTest {
     }
 
     @Test
+    void acceptsSpacesAroundQuotedField() throws Exception {
+        ParseResult result = parse(HEADER + "S1, glucose, 95, mg/dL, 2026-01-05T10:00:00Z, \"Nguyen, T.\" \n");
+
+        assertTrue(result.issues().isEmpty());
+        assertEquals("Nguyen, T.", result.records().get(0).analyst());
+    }
+
+    @Test
     void mapsReorderedHeaderByName() throws Exception {
         ParseResult result = parse("analyst,Value,assay,unit,timestamp,SAMPLE_ID\n"
                 + "jdoe,95,glucose,mg/dL,2026-01-05T10:00:00Z,S1\n");

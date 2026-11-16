@@ -35,6 +35,29 @@ class CsvLineSplitterTest {
     }
 
     @Test
+    void allowsSpacesAroundQuotedField() throws Exception {
+        assertEquals(List.of("S1", "glucose", "95", "mg/dL", "2026-01-05T10:00:00Z", "Nguyen, T."),
+                CsvLineSplitter.split("S1,glucose,95,mg/dL,2026-01-05T10:00:00Z, \"Nguyen, T.\""));
+    }
+
+    @Test
+    void allowsTabsAroundQuotedFieldInTheMiddle() throws Exception {
+        assertEquals(List.of("jd", "Nguyen, T.", "x"), CsvLineSplitter.split("jd,\t\"Nguyen, T.\" \t,x"));
+    }
+
+    @Test
+    void keepsPaddingInsideQuotesAndAroundUnquotedFields() throws Exception {
+        assertEquals(List.of(" a ", "  b  "), CsvLineSplitter.split(" \" a \" ,  b  "));
+    }
+
+    @Test
+    void rejectsTextAfterClosingQuoteEvenWithPadding() {
+        MalformedLineException e = assertThrows(MalformedLineException.class,
+                () -> CsvLineSplitter.split("\"ab\"  c,d"));
+        assertEquals("unexpected text after closing quote at position 7", e.getMessage());
+    }
+
+    @Test
     void rejectsUnterminatedQuote() {
         MalformedLineException e = assertThrows(MalformedLineException.class,
                 () -> CsvLineSplitter.split("S1,\"open,value"));

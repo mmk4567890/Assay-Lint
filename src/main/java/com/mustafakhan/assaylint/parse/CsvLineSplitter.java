@@ -7,6 +7,10 @@ import java.util.List;
  * Splits a single CSV line into fields following RFC 4180 quoting: fields may be
  * wrapped in double quotes, which allows commas inside them, and a doubled quote
  * inside a quoted field stands for one literal quote.
+ *
+ * <p>Unlike strict RFC 4180, spaces and tabs are allowed before an opening quote
+ * and after a closing quote, as in {@code jdoe, "Nguyen, T."}. Spreadsheet tools and
+ * hand edits produce this often, and the padding carries no meaning.
  */
 final class CsvLineSplitter {
 
@@ -17,7 +21,8 @@ final class CsvLineSplitter {
     }
 
     /**
-     * Splits one line into its raw, untrimmed fields.
+     * Splits one line into its fields. Unquoted fields are returned untrimmed;
+     * padding outside a quoted field is dropped.
      *
      * @param line a single line without its line terminator
      * @return the fields, in order
@@ -28,8 +33,9 @@ final class CsvLineSplitter {
         StringBuilder field = new StringBuilder();
         int i = 0;
         while (true) {
-            if (i < line.length() && line.charAt(i) == QUOTE) {
-                i = readQuoted(line, i + 1, field);
+            int firstNonBlank = skipBlanks(line, i);
+            if (firstNonBlank < line.length() && line.charAt(firstNonBlank) == QUOTE) {
+                i = readQuoted(line, firstNonBlank + 1, field);
             } else {
                 i = readUnquoted(line, i, field);
             }
@@ -69,9 +75,18 @@ final class CsvLineSplitter {
     }
 
     private static int expectFieldEnd(String line, int afterClosingQuote) throws MalformedLineException {
-        if (afterClosingQuote < line.length() && line.charAt(afterClosingQuote) != COMMA) {
-            throw new MalformedLineException("unexpected text after closing quote at position " + (afterClosingQuote + 1));
+        int i = skipBlanks(line, afterClosingQuote);
+        if (i < line.length() && line.charAt(i) != COMMA) {
+            throw new MalformedLineException("unexpected text after closing quote at position " + (i + 1));
         }
-        return afterClosingQuote;
+        return i;
+    }
+
+    private static int skipBlanks(String line, int start) {
+        int i = start;
+        while (i < line.length() && (line.charAt(i) == ' ' || line.charAt(i) == '\t')) {
+            i++;
+        }
+        return i;
     }
 }
