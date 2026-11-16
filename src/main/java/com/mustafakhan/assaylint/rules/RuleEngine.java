@@ -3,6 +3,7 @@ package com.mustafakhan.assaylint.rules;
 import com.mustafakhan.assaylint.config.RuleConfig;
 import com.mustafakhan.assaylint.model.SampleRecord;
 import com.mustafakhan.assaylint.model.ValidationIssue;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +24,11 @@ public final class RuleEngine {
     /**
      * Returns the standard rule set used by the command-line tool.
      *
+     * @param clock source of the current time, used by time-dependent rules
      * @return all built-in rules
      */
-    public static List<ValidationRule> defaultRules() {
-        return List.of(new RequiredFieldsRule(), new DuplicateSampleIdRule(), new NumericValueRule(), new RangeRule(), new UnitRule());
+    public static List<ValidationRule> defaultRules(Clock clock) {
+        return List.of(new RequiredFieldsRule(), new DuplicateSampleIdRule(), new NumericValueRule(), new RangeRule(), new UnitRule(), new TimestampRule(clock));
     }
 
     /**
