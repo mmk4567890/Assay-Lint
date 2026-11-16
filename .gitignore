@@ -13,19 +13,6 @@ target/
 .DS_Store
 Thumbs.db
 
-# Local tooling, never committed
-AGENTS.md
-CLAUDE.md
-.claude/
-.codex/
-.cursor/
-.cursorrules
-.aider*
-.copilot/
-.github/copilot-instructions.md
-.windsurf/
-.continue/
-
 # Generated reports
 report.html
 report.json
