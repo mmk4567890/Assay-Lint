@@ -18,6 +18,7 @@ class ConsoleReportWriterTest {
     void includesTraceabilityDetails() throws IOException {
         String text = render(Reports.withIssues(), false);
 
+        assertTrue(text.startsWith("Assay Lint report" + System.lineSeparator()), text);
         assertTrue(text.contains("Input:   data/samples.csv"));
         assertTrue(text.contains("SHA-256: ab12cd34"));
         assertTrue(text.contains("Config:  config/assays.json"));

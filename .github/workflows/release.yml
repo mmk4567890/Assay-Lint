@@ -29,5 +29,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create "$GITHUB_REF_NAME" target/assay-lint.jar
-          --title "assay-lint $GITHUB_REF_NAME"
+          --title "Assay Lint $GITHUB_REF_NAME"
           --generate-notes

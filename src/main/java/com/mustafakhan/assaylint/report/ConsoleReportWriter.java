@@ -47,7 +47,7 @@ public final class ConsoleReportWriter implements ReportWriter {
     }
 
     private void writeHeader(RunMetadata metadata, Appendable out) throws IOException {
-        out.append(style(BOLD, "assay-lint report")).append(NL)
+        out.append(style(BOLD, ProductName.DISPLAY + " report")).append(NL)
                 .append("  Input:   ").append(metadata.inputFile()).append(NL)
                 .append("  SHA-256: ").append(metadata.inputSha256()).append(NL)
                 .append("  Config:  ").append(metadata.configFile()).append(NL)
