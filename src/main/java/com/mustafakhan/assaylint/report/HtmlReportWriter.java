@@ -21,6 +21,16 @@ public final class HtmlReportWriter implements ReportWriter {
     private static final DateTimeFormatter TIMESTAMP =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC);
 
+    // Decorative flask-with-checkmark mark; hidden from assistive technology because the
+    // wordmark next to it already names the tool. No xmlns: inline SVG in HTML needs none.
+    private static final String BRAND_MARK = "<svg class=\"brand-mark\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\""
+            + " fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\""
+            + " stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\">"
+            + "<path d=\"M8.5 3h7\"/>"
+            + "<path d=\"M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3\"/>"
+            + "<path d=\"M9 15.5l2 2 4-4\"/>"
+            + "</svg>";
+
     private static final String STYLE = """
             :root{--accent:#4338ca;--text:#111827;--muted:#4b5563;--border:#e5e7eb;--surface:#fff;--page:#f9fafb;
             --stripe:#f9fafb;--hover:#f1f5f9;--error:#b42318;--error-bg:#fef3f2;--error-border:#fecdca;
@@ -33,9 +43,15 @@ public final class HtmlReportWriter implements ReportWriter {
             -webkit-print-color-adjust:exact;print-color-adjust:exact}
             .wrap{max-width:1100px;margin:0 auto;padding:0 var(--s2)}
             .topbar{background:var(--surface);border-bottom:1px solid var(--border)}
-            .topbar .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px}
-            .wordmark{font-weight:700;font-size:18px;letter-spacing:-.01em;color:var(--accent)}
-            .version{font:13px var(--mono);color:var(--muted)}
+            .topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:var(--s2);
+            min-height:64px;padding-top:var(--s1);padding-bottom:var(--s1)}
+            .brand{display:flex;align-items:center;gap:var(--s1);min-width:0}
+            .brand-mark{flex:none;display:block;color:var(--accent)}
+            .brand-text{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+            .wordmark{font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--text)}
+            .brand-subtitle{font-size:12px;color:var(--muted)}
+            .version{flex:none;padding:2px var(--s1);border:1px solid var(--border);border-radius:999px;background:var(--page);
+            color:var(--muted);font-size:12px;font-weight:600;line-height:16px;white-space:nowrap}
             main.wrap{display:grid;gap:var(--s3);padding-top:var(--s3);padding-bottom:var(--s4)}
             h2{font-size:16px;font-weight:600;margin:0 0 var(--s2)}
             .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--s3)}
@@ -169,9 +185,11 @@ public final class HtmlReportWriter implements ReportWriter {
     }
 
     private static void writeTopBar(RunMetadata metadata, Appendable out) throws IOException {
-        out.append("<header class=\"topbar\"><div class=\"wrap\">")
-                .append("<span class=\"wordmark\">assay-lint</span>")
-                .append("<span class=\"version\">v").append(escape(metadata.toolVersion())).append("</span>")
+        out.append("<header class=\"topbar\"><div class=\"wrap\">\n")
+                .append("<div class=\"brand\">").append(BRAND_MARK)
+                .append("<div class=\"brand-text\"><span class=\"wordmark\">assay-lint</span>")
+                .append("<span class=\"brand-subtitle\">Data integrity report</span></div></div>\n")
+                .append("<span class=\"version\">v").append(escape(metadata.toolVersion())).append("</span>\n")
                 .append("</div></header>\n");
     }
 
