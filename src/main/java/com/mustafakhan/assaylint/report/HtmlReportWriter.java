@@ -21,10 +21,13 @@ public final class HtmlReportWriter implements ReportWriter {
     private static final DateTimeFormatter TIMESTAMP =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC);
 
-    // Decorative flask-with-checkmark mark; hidden from assistive technology because the
+    /** Name shown to people; the command, jar and package keep the identifier {@code assay-lint}. */
+    private static final String PRODUCT_NAME = "Assay Lint";
+
+    // Decorative flask-with-checkmark icon; hidden from assistive technology because the
     // wordmark next to it already names the tool. No xmlns: inline SVG in HTML needs none.
-    private static final String BRAND_MARK = "<svg class=\"brand-mark\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\""
-            + " fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\""
+    private static final String BRAND_MARK = "<svg class=\"brand-mark\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\""
+            + " fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\""
             + " stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\">"
             + "<path d=\"M8.5 3h7\"/>"
             + "<path d=\"M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3\"/>"
@@ -45,11 +48,13 @@ public final class HtmlReportWriter implements ReportWriter {
             .topbar{background:var(--surface);border-bottom:1px solid var(--border)}
             .topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:var(--s2);
             min-height:64px;padding-top:var(--s1);padding-bottom:var(--s1)}
-            .brand{display:flex;align-items:center;gap:var(--s1);min-width:0}
-            .brand-mark{flex:none;display:block;color:var(--accent)}
-            .brand-text{display:flex;flex-direction:column;line-height:1.2;min-width:0}
-            .wordmark{font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--text)}
-            .brand-subtitle{font-size:12px;color:var(--muted)}
+            .brand{display:flex;align-items:center;gap:12px;min-width:0}
+            .brand-logo{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:8px;
+            background:var(--accent);color:#fff}
+            .brand-mark{display:block}
+            .brand-text{display:flex;flex-direction:column;min-width:0}
+            .wordmark{font-size:22px;line-height:1.2;font-weight:700;letter-spacing:-.02em;color:var(--text)}
+            .brand-subtitle{margin-top:2px;font-size:13px;line-height:1.3;color:var(--muted)}
             .version{flex:none;padding:2px var(--s1);border:1px solid var(--border);border-radius:999px;background:var(--page);
             color:var(--muted);font-size:12px;font-weight:600;line-height:16px;white-space:nowrap}
             main.wrap{display:grid;gap:var(--s3);padding-top:var(--s3);padding-bottom:var(--s4)}
@@ -168,7 +173,7 @@ public final class HtmlReportWriter implements ReportWriter {
         RunMetadata metadata = report.metadata();
         out.append("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n")
                 .append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n")
-                .append("<title>assay-lint report: ").append(escape(displayPath(metadata.inputFile())))
+                .append("<title>").append(PRODUCT_NAME).append(" report: ").append(escape(displayPath(metadata.inputFile())))
                 .append("</title>\n<style>\n").append(STYLE).append("</style>\n</head>\n<body>\n");
         writeTopBar(metadata, out);
         out.append("<main class=\"wrap\">\n");
@@ -186,9 +191,9 @@ public final class HtmlReportWriter implements ReportWriter {
 
     private static void writeTopBar(RunMetadata metadata, Appendable out) throws IOException {
         out.append("<header class=\"topbar\"><div class=\"wrap\">\n")
-                .append("<div class=\"brand\">").append(BRAND_MARK)
-                .append("<div class=\"brand-text\"><span class=\"wordmark\">assay-lint</span>")
-                .append("<span class=\"brand-subtitle\">Data integrity report</span></div></div>\n")
+                .append("<div class=\"brand\"><span class=\"brand-logo\">").append(BRAND_MARK).append("</span>")
+                .append("<div class=\"brand-text\"><span class=\"wordmark\">").append(PRODUCT_NAME).append("</span>")
+                .append("<span class=\"brand-subtitle\">Lab data validation report</span></div></div>\n")
                 .append("<span class=\"version\">v").append(escape(metadata.toolVersion())).append("</span>\n")
                 .append("</div></header>\n");
     }
@@ -319,7 +324,7 @@ public final class HtmlReportWriter implements ReportWriter {
     }
 
     private static void writeFooter(RunMetadata metadata, Appendable out) throws IOException {
-        out.append("<footer><div class=\"wrap\"><span>Generated by assay-lint v")
+        out.append("<footer><div class=\"wrap\"><span>Generated by ").append(PRODUCT_NAME).append(" v")
                 .append(escape(metadata.toolVersion())).append("</span><span>")
                 .append(TIMESTAMP.format(metadata.runAt())).append("</span></div></footer>\n");
     }
