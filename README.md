@@ -4,7 +4,7 @@ Validates lab sample data before it reaches a LIMS or other regulated system.
 
 [![CI](https://github.com/mmk4567890/assay-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/mmk4567890/assay-lint/actions/workflows/ci.yml)
 
-Assay Lint is a command-line tool that checks laboratory sample data files (CSV) for data-integrity problems before they are loaded into a LIMS, ELN or other regulated system. It flags missing fields, duplicate results, non-numeric or out-of-range values, wrong units, invalid or future timestamps, out-of-order measurements and unknown assays, and reports each problem with its line number. Every report records the SHA-256 of the input, the config used and a UTC timestamp, so a result can be traced back to the exact file that was checked. Because the exit code reflects what was found, the same check can gate a CI pipeline or an automated data transfer.
+Assay Lint is a command-line tool that checks laboratory sample data files (CSV) for data-integrity problems before they are loaded into a LIMS, ELN or other regulated systems. It flags missing fields, duplicated results, non-numeric or out-of-range values, wrong units, invalid or future timestamps, out-of-order measurements and unknown assays, reporting each problem with its line number. Every report records the SHA-256 of the input, the config used, and a UTC timestamp, so a result can be traced back to the exact file that was checked. Because the exit code reflects what was found, the same check can gate a CI pipeline or an automated data transfer.
 
 ![HTML report](docs/report.png)
 
